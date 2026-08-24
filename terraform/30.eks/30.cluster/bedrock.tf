@@ -63,8 +63,8 @@ resource "aws_iam_role_policy" "litellm_bedrock" {
         "bedrock:ConverseStream",
       ]
       Resource = [
-        "arn:aws:bedrock:*::foundation-model/*",
-        "arn:aws:bedrock:*:${data.aws_caller_identity.current.account_id}:inference-profile/*",
+        "arn:${local.partition}:bedrock:*::foundation-model/*",
+        "arn:${local.partition}:bedrock:*:${data.aws_caller_identity.current.account_id}:inference-profile/*",
       ]
     }]
   })

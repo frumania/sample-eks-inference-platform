@@ -1,6 +1,7 @@
 locals {
   cluster_name    = "${var.shared_config.resources_prefix}-${terraform.workspace}"
   region          = data.aws_region.current.id
+  partition       = data.aws_partition.current.partition
   tfstate_region  = try(var.tfstate_region, local.region)
   cluster_version = var.cluster_config.kubernetes_version
   eks_auto_mode   = try(var.cluster_config.eks_auto_mode, false)
@@ -35,6 +36,15 @@ locals {
     kro    = try(var.cluster_config.capabilities.kro, false)
     ack    = try(var.cluster_config.capabilities.ack, false)
   }
+
+  # Whether to provision the AWS-managed EKS Capabilities (aws_eks_capability.*).
+  # ESC (eusc-de-east-1) has NO Managed Capabilities (EKS CreateCapability is
+  # absent there), so set cluster_config.capabilities.eks_capabilities = false and
+  # self-install ArgoCD/KRO via Helm. This flag ONLY gates the aws_eks_capability.*
+  # resources (and their IAM role/trust/access-associations/cluster-secret/bootstrap);
+  # the gitops/kro/ack flags above still gate the platform SUPPORT resources
+  # (namespaces, IRSA, secrets, ConfigMaps, buckets). Defaults true (managed).
+  use_managed_capabilities = try(var.cluster_config.capabilities.eks_capabilities, true)
 
   create_mng_system = try(var.cluster_config.create_mng_system, !local.eks_auto_mode, true)
 

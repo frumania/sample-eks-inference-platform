@@ -33,15 +33,6 @@ provider "aws" {
   }
 }
 
-# Used for ECR authentication 
-provider "aws" {
-  region = "us-east-1"
-  alias  = "virginia"
-  default_tags {
-    tags = local.tags
-  }
-}
-
 provider "helm" {
   kubernetes {
     host                   = module.eks.cluster_endpoint
