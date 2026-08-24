@@ -102,9 +102,24 @@ resource "kubernetes_config_map" "litellm_env" {
     namespace = "ai-platform"
   }
 
-  data = {
-    AWS_REGION = local.region
-  }
+  data = merge(
+    {
+      AWS_REGION = local.region
+    },
+    # ESC (aws-eusc) only: force the sovereign-partition STS endpoint so IRSA
+    # (AssumeRoleWithWebIdentity) validates against the ESC OIDC provider. An SDK
+    # that doesn't know the aws-eusc partition otherwise resolves STS to the
+    # commercial endpoint and fails with InvalidIdentityToken. The endpoint is
+    # sts.<region>.<dns_suffix>; for aws-eusc dns_suffix is amazonaws.eu (same
+    # domain family as the EKS/ECR/OIDC endpoints) — confirmed via
+    # `aws sts get-caller-identity --debug`. Commercial (partition "aws") omits
+    # the key and uses the SDK's default (correct) STS resolution.
+    {
+      for k, v in {
+        AWS_ENDPOINT_URL_STS = local.partition == "aws-eusc" ? "https://sts.${local.region}.${data.aws_partition.current.dns_suffix}" : ""
+      } : k => v if v != ""
+    },
+  )
 
   depends_on = [kubernetes_namespace.ai_platform]
 }

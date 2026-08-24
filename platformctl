@@ -405,16 +405,22 @@ _status_check() {
   pf_pid=$!
   sleep 4
 
-  if curl -fsS "$base/v1/models" -H "Authorization: Bearer $mk" >/dev/null 2>&1; then
+  local models_json
+  if models_json=$(curl -fsS "$base/v1/models" -H "Authorization: Bearer $mk" 2>/dev/null); then
     ok "LiteLLM gateway responding (/v1/models)"
+    if command -v jq >/dev/null 2>&1; then
+      echo "$models_json" | jq -r '.data[].id' 2>/dev/null | sed 's/^/    - /'
+    else
+      echo "    $models_json"
+    fi
   else
     warn "LiteLLM gateway not responding"
   fi
   code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$base/v1/chat/completions" \
     -H "Authorization: Bearer $mk" -H "Content-Type: application/json" \
-    -d '{"model":"claude-opus-4-8","messages":[{"role":"user","content":"ping"}],"max_tokens":5}')
+    -d '{"model":"nova-lite","messages":[{"role":"user","content":"ping"}],"max_tokens":5}')
   if [ "$code" = "200" ]; then
-    ok "Bedrock frontier model answered (claude-opus-4-8)"
+    ok "Bedrock frontier model answered (nova-lite)"
   else
     warn "Bedrock model call returned HTTP $code — enable Bedrock model access in the console (per-account toggle)"
   fi
