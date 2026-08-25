@@ -142,7 +142,12 @@ spec:
               # spec.instanceType is set. Built as a CEL map (ternary over two map
               # literals) so the node.kubernetes.io/instance-type key only appears
               # when requested — same optional-append pattern as extraEnv/args.
-              nodeSelector: ${schema.spec.?instanceType.orValue("") != "" ? {"workload-type": (schema.spec.shared ? "gpu-shared" : "gpu-inference"), "node.kubernetes.io/instance-type": schema.spec.instanceType} : {"workload-type": (schema.spec.shared ? "gpu-shared" : "gpu-inference")}}
+              # NOTE: single-quoted so YAML does not interpret the ':' inside the
+              # CEL map literals as nested mappings (unquoted fails to parse). The
+              # CEL uses only double quotes internally, so the single-quoted scalar
+              # preserves it verbatim; KRO still evaluates the whole-value ${...}
+              # expression to a map<string,string>.
+              nodeSelector: '${schema.spec.?instanceType.orValue("") != "" ? {"workload-type": (schema.spec.shared ? "gpu-shared" : "gpu-inference"), "node.kubernetes.io/instance-type": schema.spec.instanceType} : {"workload-type": (schema.spec.shared ? "gpu-shared" : "gpu-inference")}}'
               tolerations:
                 - key: nvidia.com/gpu
                   operator: Exists
