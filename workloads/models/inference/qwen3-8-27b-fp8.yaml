@@ -1,0 +1,16 @@
+apiVersion: kro.run/v1alpha1
+kind: VLLMEndpoint
+metadata:
+  name: qwen3-8-27b-fp8
+  namespace: inference
+spec:
+  model: "Qwen/Qwen3.8-27B-FP8"
+  gpuCount: 8
+  tensorParallelSize: 8
+  maxModelLen: 8192
+  minVramPerGpuGiB: 11
+  workerMemory: "56Gi"
+  instanceType: g6.48xlarge   # pinned via --instance-type
+  # maxNumSeqs: 64
+  replicas: 1
+  toolCallParser: hermes   # auto-detected from Qwen3_5ForConditionalGeneration — enables tool calling; remove for chat-only
