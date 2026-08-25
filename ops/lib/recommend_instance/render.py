@@ -369,6 +369,8 @@ def _deploy_flags(args: argparse.Namespace) -> str:
         parts.append(f"--users {args.users}")
     if getattr(args, "tier", "auto") not in (None, "auto"):
         parts.append(f"--tier {args.tier}")
+    if getattr(args, "instance_type", None):
+        parts.append(f"--instance-type {args.instance_type}")
     return (" " + " ".join(parts)) if parts else ""
 
 
@@ -1001,6 +1003,10 @@ def build_endpoint_yaml(
     is_disagg = kind == "LLMDDisaggEndpoint"
     is_llmd = kind == "LLMDEndpoint"
     is_llmd_family = is_llmd or is_disagg
+    if getattr(args, "instance_type", None) and is_llmd_family:
+        sys.stderr.write(
+            f"warning: --instance-type {args.instance_type} applies to the vllm tier only; "
+            f"ignoring it for {kind} (the llm-d CRDs have no instanceType field).\n")
     # shared time-slicing is a single-replica, non-llm-d feature.
     shared = (not scaling) and (not is_llmd_family) and best.total_gpus == 1 and best.shared_eligible
 
@@ -1087,6 +1093,12 @@ def build_endpoint_yaml(
     elif kind == "VLLMEndpoint":
         # vLLM is the fixed-size tier — no built-in autoscaler, so a single
         # replica count (not min/max). The llm-d tier is the scale path.
+        # Optional exact instance-type pin (--instance-type): cli.py has already
+        # verified the model fits this type and sized gpuCount/TP to it, so we
+        # just emit the field. Placement is deterministic — the pod stays Pending
+        # if the type is unavailable instead of upsizing to a bigger box.
+        if getattr(args, "instance_type", None):
+            lines.append(f"  instanceType: {args.instance_type}   # pinned via --instance-type")
         lines.append(f"  # maxNumSeqs: {max_num_seqs}")
         lines.append(f"  replicas: {min_replicas}")
         # The hf-cache emptyDir stages the full checkpoint (HF download or S3
