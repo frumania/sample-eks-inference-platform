@@ -13,7 +13,7 @@ spec:
   workerMemory: "120Gi"   # 2 PP worker procs load a ~29Gi ckpt + torch.compile host spike; 30Gi OOM-killed (exit 137). Node has ~720Gi.
   instanceType: g6.48xlarge   # pinned via --instance-type
   # maxNumSeqs: 64
-  replicas: 1
+  replicas: 4
   toolCallParser: qwen3_xml   # set via --tool-call-parser — enables tool calling; remove for chat-only
   extraArgs:   # raw vLLM flags appended to `vllm serve`
     - "--reasoning-parser"
