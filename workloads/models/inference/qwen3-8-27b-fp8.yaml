@@ -22,4 +22,4 @@ spec:
     - "fp8"
     - "--enable-prefix-caching"
     - "--speculative-config"
-    - '{"method":"mtp","num_speculative_tokens":3}'
+    - '{"method":"mtp","num_speculative_tokens":1}'
