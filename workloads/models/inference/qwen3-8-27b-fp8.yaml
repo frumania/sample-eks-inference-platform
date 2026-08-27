@@ -5,9 +5,9 @@ metadata:
   namespace: inference
 spec:
   model: "Qwen/Qwen3.8-27B-FP8"
-  gpuCount: 2                 # PP(2) x TP(1) = 2 GPUs (model's recommended parallelism); uses 2 of the g6.48xlarge's 8 L4s
+  gpuCount: 4                 # PP(4) x TP(1) = 4 GPUs; ~7.2Gi weights/GPU leaves room for 32k KV+graphs on L4 (22Gi). PP=2 OOM'd.
   tensorParallelSize: 1
-  pipelineParallelSize: 2
+  pipelineParallelSize: 4
   maxModelLen: 32768
   minVramPerGpuGiB: 20    # L4 reports 22888Mi/GPU; keep <=22 or the affinity ((n-1)*1024)-1 makes the pod Pending
   workerMemory: "120Gi"   # 2 PP worker procs load a ~29Gi ckpt + torch.compile host spike; 30Gi OOM-killed (exit 137). Node has ~720Gi.
