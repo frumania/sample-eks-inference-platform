@@ -106,6 +106,16 @@ def main(argv: list[str] | None = None) -> int:
                         "throughput — forces escalation to faster GPUs if needed.")
     p.add_argument("--hf-token", default=os.environ.get("HF_TOKEN"),
                    help="HuggingFace token (also $HF_TOKEN). Required for gated models.")
+    p.add_argument("--tool-call-parser", default=None, metavar="NAME",
+                   help="Override the vLLM tool-call parser written to the manifest "
+                        "(toolCallParser field -> --enable-auto-tool-choice "
+                        "--tool-call-parser NAME). Default: auto-detected from the "
+                        "model architecture. Pass 'none' to force chat-only (disable "
+                        "tool calling).")
+    p.add_argument("--reasoning-parser", default=None, metavar="NAME",
+                   help="Set the vLLM reasoning parser (e.g. qwen3, deepseek_r1). "
+                        "There is no dedicated CRD field, so it is appended to "
+                        "extraArgs as `--reasoning-parser NAME`.")
     p.add_argument("--tier", choices=["auto", "vllm", "llm-d", "llm-d-disagg"], default="auto",
                    help="Serving CRD to emit: vllm=VLLMEndpoint, llm-d=LLMDEndpoint "
                         "(scale tier), llm-d-disagg=LLMDDisaggEndpoint (prefill/decode split). "

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 import sys
 
 from .catalog import TIME_SLICE_REPLICAS
@@ -973,6 +974,20 @@ def tool_call_parser_for(architecture: str) -> str:
     return ""
 
 
+# vLLM parser ids are simple tokens (e.g. hermes, qwen3, deepseek_r1,
+# llama4_pythonic). These values are interpolated into a manifest that --deploy
+# commits and ArgoCD applies, so restrict them to a safe charset — same
+# injection-safety posture as the model-id / name validation above.
+_PARSER_NAME_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
+
+
+def _valid_parser_name(value: str, flag: str) -> str:
+    if not _PARSER_NAME_RE.match(value):
+        sys.exit(f"error: invalid {flag} value {value!r} "
+                 f"(expected a token like hermes, qwen3, or deepseek_r1).")
+    return value
+
+
 def build_endpoint_yaml(
     kind: str,
     model: ModelSpec, vram: VramEstimate, best: Option,
@@ -1110,14 +1125,34 @@ def build_endpoint_yaml(
                          f'~{vram.weights_gb:,.0f} GiB — also ensure the node volume fits '
                          f'(tfvar gpu_node_volume_size_gib)')
 
-    # Tool/function calling applies to all three tiers (each fronts vLLM). Auto-
-    # enable it for known tool-capable families so tool_choice:auto works out of
-    # the box; written explicitly so it's visible and overridable (delete for
-    # chat-only, or change if you pin a different vllmImage). Unknown families
-    # emit nothing (chat-only).
-    parser = tool_call_parser_for(model.architecture)
+    # Tool/function calling applies to all three tiers (each fronts vLLM). An
+    # explicit --tool-call-parser wins; otherwise auto-enable it for known
+    # tool-capable families so tool_choice:auto works out of the box. Written
+    # explicitly so it's visible and overridable (delete for chat-only, or change
+    # if you pin a different vllmImage). Unknown families emit nothing (chat-only).
+    # Pass --tool-call-parser none to force chat-only on an auto-detected family.
+    override = getattr(args, "tool_call_parser", None)
+    if override is not None:
+        override = override.strip()
+        if override.lower() in ("", "none"):
+            parser = ""  # explicit opt-out -> chat-only
+        else:
+            parser = _valid_parser_name(override, "--tool-call-parser")
+        origin = "set via --tool-call-parser"
+    else:
+        parser = tool_call_parser_for(model.architecture)
+        origin = f"auto-detected from {model.architecture}"
     if parser:
-        lines.append(f"  toolCallParser: {parser}   # auto-detected from {model.architecture} — enables tool calling; remove for chat-only")
+        lines.append(f"  toolCallParser: {parser}   # {origin} — enables tool calling; remove for chat-only")
+
+    # Reasoning parser has no dedicated CRD field — pass it through extraArgs,
+    # which every tier appends verbatim to `vllm serve` (--reasoning-parser NAME).
+    reasoning = getattr(args, "reasoning_parser", None)
+    if reasoning and reasoning.strip():
+        reasoning = _valid_parser_name(reasoning.strip(), "--reasoning-parser")
+        lines.append(f"  extraArgs:   # raw vLLM flags appended to `vllm serve`")
+        lines.append(f'    - "--reasoning-parser"')
+        lines.append(f'    - "{reasoning}"')
 
     yaml_body = "\n".join(lines) + "\n"
     return name, yaml_path, yaml_body, commit_msg
@@ -1135,10 +1170,21 @@ def _print_yaml_snippet(model: ModelSpec, vram: VramEstimate, best: Option,
            "LLMDEndpoint": "fleet of 2+ replicas -> llm-d scale tier (KV/prefix/load-aware routing)",
            "VLLMEndpoint": "single replica -> plain vLLM (simplest, no router)"}.get(kind, kind)
     print(f"\n{C.BOLD}Serving tier:{C.RESET} {C.BOLD}{kind}{C.RESET} {C.DIM}- {why}{C.RESET}")
-    parser = tool_call_parser_for(model.architecture)
-    if parser:
-        print(f"{C.DIM}  tool calling: enabled — --tool-call-parser {parser} "
-              f"(auto-detected from {model.architecture}; remove toolCallParser for chat-only).{C.RESET}")
+    override = getattr(args, "tool_call_parser", None)
+    if override is not None:
+        ov = override.strip()
+        if ov.lower() in ("", "none"):
+            print(f"{C.DIM}  tool calling: disabled — chat-only (via --tool-call-parser none).{C.RESET}")
+        else:
+            print(f"{C.DIM}  tool calling: enabled — --tool-call-parser {ov} (via --tool-call-parser).{C.RESET}")
+    else:
+        parser = tool_call_parser_for(model.architecture)
+        if parser:
+            print(f"{C.DIM}  tool calling: enabled — --tool-call-parser {parser} "
+                  f"(auto-detected from {model.architecture}; remove toolCallParser for chat-only).{C.RESET}")
+    reasoning = getattr(args, "reasoning_parser", None)
+    if reasoning and reasoning.strip():
+        print(f"{C.DIM}  reasoning: --reasoning-parser {reasoning.strip()} (appended to extraArgs).{C.RESET}")
     if kind in ("LLMDEndpoint", "LLMDDisaggEndpoint"):
         prof = pick_routing_profile(args)
         print(f"{C.DIM}  routingProfile '{prof}' baked into the manifest (EPP scorer weights).{C.RESET}")
