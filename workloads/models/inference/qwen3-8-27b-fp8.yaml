@@ -5,7 +5,7 @@ metadata:
   namespace: inference
 spec:
   model: "Qwen/Qwen3.8-27B-FP8"
-  gpuCount: 8                 # PP(2) x TP(1) = 2 GPUs (model's recommended parallelism); uses 2 of the g6.48xlarge's 8 L4s
+  gpuCount: 2                 # PP(2) x TP(1) = 2 GPUs (model's recommended parallelism); uses 2 of the g6.48xlarge's 8 L4s
   tensorParallelSize: 1
   pipelineParallelSize: 2
   maxModelLen: 32768
@@ -13,7 +13,7 @@ spec:
   workerMemory: "120Gi"   # 2 PP worker procs load a ~29Gi ckpt + torch.compile host spike; 30Gi OOM-killed (exit 137). Node has ~720Gi.
   instanceType: g6.48xlarge   # pinned via --instance-type
   # maxNumSeqs: 64
-  replicas: 4
+  replicas: 1
   toolCallParser: qwen3_xml   # set via --tool-call-parser — enables tool calling; remove for chat-only
   extraArgs:   # raw vLLM flags appended to `vllm serve`
     - "--reasoning-parser"
