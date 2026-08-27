@@ -5,8 +5,8 @@ metadata:
   namespace: inference
 spec:
   model: "Qwen/Qwen3.8-27B-FP8"
-  gpuCount: 4                 # TP(4) x PP(1) = 4 GPUs; tensor-parallel so all 4 L4s compute each token in parallel (PP=4 gave ~8 tok/s single-stream)
-  tensorParallelSize: 4
+  gpuCount: 8                 # TP(8) x PP(1) = all 8 L4s; more aggregate bandwidth for bandwidth-bound decode (TP=4 gave ~22 tok/s)
+  tensorParallelSize: 8
   pipelineParallelSize: 1
   maxModelLen: 32768
   minVramPerGpuGiB: 20    # L4 reports 22888Mi/GPU; keep <=22 or the affinity ((n-1)*1024)-1 makes the pod Pending
@@ -20,3 +20,6 @@ spec:
     - "qwen3"
     - "--kv-cache-dtype"
     - "fp8"
+    - "--enable-prefix-caching"
+    - "--speculative-config"
+    - '{"method":"mtp","num_speculative_tokens":3}'
