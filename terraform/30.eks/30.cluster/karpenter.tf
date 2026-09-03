@@ -130,10 +130,10 @@ module "karpenter" {
 resource "helm_release" "karpenter" {
   count = local.capabilities.autoscaling ? 1 : 0
 
-  namespace           = "kube-system"
-  name                = "karpenter"
-  repository          = "oci://public.ecr.aws/karpenter"
-  chart               = "karpenter"
+  namespace  = "kube-system"
+  name       = "karpenter"
+  repository = "oci://public.ecr.aws/karpenter"
+  chart      = "karpenter"
   # NOTE (CRDs): Helm does NOT upgrade CRDs bundled under the chart's `crds/`
   # directory on `helm upgrade` — it only installs them on first `helm install`.
   # Karpenter v1.14 moves the CapacityBuffer CRD to apiVersion v1beta1, so an

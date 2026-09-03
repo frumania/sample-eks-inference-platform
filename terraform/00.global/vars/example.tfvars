@@ -35,8 +35,8 @@ cluster_config = {
   # kubectl/helm resources will time out on the private endpoint). Leave false
   # unless you have that in-VPC path.
   private_eks_cluster = false
-  
-  create_mng_system   = true # Required when not using auto mode — runs Karpenter, CoreDNS, VPC CNI
+
+  create_mng_system = true # Required when not using auto mode — runs Karpenter, CoreDNS, VPC CNI
 
   capabilities = {
     kube_proxy    = true # kube proxy
@@ -66,7 +66,7 @@ cluster_config = {
   #       --query 'Instances[].[InstanceArn,IdentityStoreId]' --output text; done
   #   aws identitystore list-users --identity-store-id <d-xxxx> --region <idc-region> \
   #     --query 'Users[].[UserName,UserId]' --output text
-  
+
   capabilities_config = {
     argocd_idc_instance_arn = "arn:aws:sso:::instance/ssoins-XXXXXXXXXX" # REPLACE
     argocd_idc_region       = "us-east-1"                                # REPLACE — the Identity Center instance's region (may differ from `region`)

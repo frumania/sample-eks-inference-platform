@@ -32,7 +32,7 @@ cluster_config = {
 
   private_eks_cluster = false
 
-  create_mng_system   = true # Required when not using auto mode — runs Karpenter, CoreDNS, VPC CNI
+  create_mng_system = true # Required when not using auto mode — runs Karpenter, CoreDNS, VPC CNI
 
   capabilities = {
     kube_proxy    = true # kube proxy
@@ -46,8 +46,8 @@ cluster_config = {
     # Do not use EKS Managed Capabilities (AWS-managed gitops/argocd, kro, ack). Are created via Helm automatically instead.
     eks_capabilities = false # NOT available in the ESC partition
 
-    gitops           = true  # ON = ArgoCD + pipeline
-    kro              = true  # ON = required by gitops/ArgoCD
+    gitops = true # ON = ArgoCD + pipeline
+    kro    = true # ON = required by gitops/ArgoCD
 
     # ack              = true # optional, unused by this solution
     # ack_service_controllers = {

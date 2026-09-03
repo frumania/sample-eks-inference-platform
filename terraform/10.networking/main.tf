@@ -5,7 +5,7 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  name                  = "${var.shared_config.resources_prefix}-${terraform.workspace}"
+  name = "${var.shared_config.resources_prefix}-${terraform.workspace}"
   # Use up to var.num_azs zones, but never more than the region actually exposes.
   # ESC (eusc-de-east-1) launched with 2 AZs, while commercial regions have 3+.
   #
