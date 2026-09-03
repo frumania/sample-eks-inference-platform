@@ -1,19 +1,19 @@
-# Inference Platform on Amazon EKS
+# Self-Service Inference Platform on Amazon EKS
 
 **Run every AI model your teams need - behind one API, in your own AWS account.**
   
-A self-service platform that lets teams use large language models the way they ship code: commit a few lines of YAML, git push, and the platform handles the rest — GPUs, serving, scaling, routing, and monitoring. Use frontier models from Amazon Bedrock on day one with no GPUs to manage or deploy open-source or fine-tuned models, provisioned and served automatically.
+A self-service platform that lets teams use large language models the way they ship code: commit a few lines of YAML, git push, and the platform handles the rest - GPUs, serving, scaling, routing, and monitoring. Use frontier models from Amazon Bedrock on day one with no GPUs to manage or deploy open-source or fine-tuned models, provisioned and served automatically.
   
-And it all runs in your account and region — including the AWS European Sovereign Cloud — so your data and models stay where you control them.
+And it all runs in your account and region - including the AWS European Sovereign Cloud - so your data and models stay where you control them.
   
 Why teams like it:
   
 - One API for every model. A single OpenAI-compatible endpoint fronts both Amazon Bedrock and your own Hugging Face / fine-tuned
-models — switch models by changing one string, not your code. Use in your IDE/tooling of choice e.g. Cline etc.
+models - switch models by changing one string, not your code. Use in your IDE/tooling of choice e.g. Cline etc.
 - Production-ready by design, with dashboards and tooling out-of the box (langfuse, grafana, argo, litellm UI, Open WebUI)
 - Governance without the glue work. Each team gets its own API key, budget, and rate limits, with per-user cost tracking and
-request tracing built in — so you can safely open it up to many teams.
-- Ship models like code. Adding, updating, or removing a model is a YAML commit that ArgoCD deploys — no consoles, no tickets, no
+request tracing built in - so you can safely open it up to many teams.
+- Ship models like code. Adding, updating, or removing a model is a YAML commit that ArgoCD deploys - no consoles, no tickets, no
 bespoke infra scripts.
 - The hard GPU parts, handled. Right-sizing, autoscaling, multi-GPU parallelism, and scale-out routing come from a few reusable
 templates, so you get production-grade serving from a short spec instead of deep Kubernetes/vLLM expertise.
@@ -21,10 +21,10 @@ templates, so you get production-grade serving from a short spec instead of deep
 tokens-per-dollar per model.
 
 **Stack:** EKS Managed Capabilities (ArgoCD · KRO · ACK) · Karpenter · vLLM ·
-LiteLLM · Langfuse — with an optional **llm-d + Gateway API Inference
+LiteLLM · Langfuse - with an optional **llm-d + Gateway API Inference
 Extension** scale tier.
 
-![Cluster dashboard — live topology of nodes, GPU slots, and deployed models](docs/img/cluster-dashboard.png)
+![Cluster dashboard - live topology of nodes, GPU slots, and deployed models](docs/img/cluster-dashboard.png)
 
 ---
 
@@ -40,9 +40,9 @@ The custom resources **are** the self-service interface:
 
 | Resource | What it does |
 |---|---|
-| **`VLLMEndpoint`** | Serve a model on vLLM — the simple default: one model, one pod, one instance (any Hugging Face model ID) |
-| **`LLMDEndpoint`** | Serve a model on the llm-d scale tier — KV-cache/load/prefix-aware routing across replicas (the `inference-gateway` substrate ships on every cluster; no toggle) |
-| **`LLMDDisaggEndpoint`** | Serve on the llm-d scale + performance tier — independently autoscaled prefill/decode pools (same llm-d substrate; no toggle) |
+| **`VLLMEndpoint`** | Serve a model on vLLM - the simple default: one model, one pod, one instance (any Hugging Face model ID) |
+| **`LLMDEndpoint`** | Serve a model on the llm-d scale tier - KV-cache/load/prefix-aware routing across replicas (the `inference-gateway` substrate ships on every cluster; no toggle) |
+| **`LLMDDisaggEndpoint`** | Serve on the llm-d scale + performance tier - independently autoscaled prefill/decode pools (same llm-d substrate; no toggle) |
 | **`AITeam`** | Onboard a team: namespace, RBAC, budget, rate limits, scoped API key |
 
 Bedrock models need no resource - they're a few lines of LiteLLM config (`litellm.yaml`), live the
@@ -50,7 +50,7 @@ moment the cluster is up. KRO definitions live in `platform/config/kro/`; extend
 them there and every model/team inherits the change.
 
 Every model answers through the same LiteLLM `/v1` API, so governance, budgets, and
-tracing apply uniformly — including the optional **llm-d** scale tier
+tracing apply uniformly - including the optional **llm-d** scale tier
 (`LLMDEndpoint` / `LLMDDisaggEndpoint`), which LiteLLM forwards to internally.
 
 ---
@@ -61,14 +61,14 @@ tracing apply uniformly — including the optional **llm-d** scale tier
 - **AWS CLI v2** with credentials configured (`aws sts get-caller-identity` must work), plus the
   [Session Manager plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) (for `./platformctl tunnel`)
 - **Terraform**, **kubectl**, **make**, **jq**, **git**, and **python3** with **boto3**
-- A **fork of this repo** that ArgoCD can read — its URL goes in `gitops_repo_url`
+- A **fork of this repo** that ArgoCD can read - its URL goes in `gitops_repo_url`
 
 **AWS account setup**:
 - (Optional) If using EKS Managed Capabilities (`eks_capabilities` = true = default):
-  An **IAM Identity Center** instance for managed ArgoCD — its ARN and the SSO user who should get
+  An **IAM Identity Center** instance for managed ArgoCD - its ARN and the SSO user who should get
   ArgoCD admin go in the tfvars (`argocd_idc_instance_arn`, `argocd_idc_region`,
   and `argocd_rbac_mappings`). **Its region can differ from your deploy `region`**
-  — Identity Center is one instance per account (often in a different region than
+  - Identity Center is one instance per account (often in a different region than
   where you deploy this platform), so set `argocd_idc_region` to *that* region, not
   necessarily your deploy region. Find your instance + a user id with:
   ```bash
@@ -87,10 +87,10 @@ tracing apply uniformly — including the optional **llm-d** scale tier
 
 > ⚠️ **Before you deploy - this creates real, billable infrastructure in your AWS
 > account.** It provisions an EKS cluster and (on demand) GPU nodes. The platform
-> UIs sit behind an **internal ALB** by default (no public IP) — reach them via
+> UIs sit behind an **internal ALB** by default (no public IP) - reach them via
 > `./platformctl tunnel` or the opt-in CloudFront edge. If you switch the ALB to
 > **internet-facing**, restrict it to your own IP ranges via the **IP allowlist**
-> first — never leave it open to the public internet (`0.0.0.0/0`). GPU nodes and
+> first - never leave it open to the public internet (`0.0.0.0/0`). GPU nodes and
 > the cluster incur significant cost; use [Cleanup](#cleanup) to remove
 > everything when finished. See [SECURITY.md](SECURITY.md).
 
@@ -98,7 +98,7 @@ tracing apply uniformly — including the optional **llm-d** scale tier
 1. Configure: Copy the template, then set your gitops repo URL, and region.
 ```bash
 cd terraform/00.global/vars && cp example.tfvars dev.tfvars   
-# edit dev.tfvars — fill every REPLACE marker e.g. your Identity Center ARN + **its region** (`argocd_idc_region`, may differ from `region`) + your **SSO user id** (`argocd_rbac_mappings`), `gitops_repo_url` (your fork), `region`, a unique `resources_prefix`, and `cluster_endpoint_public_access_cidrs` (your operator IP/CIDR — **required**
+# edit dev.tfvars - fill every REPLACE marker e.g. your Identity Center ARN + **its region** (`argocd_idc_region`, may differ from `region`) + your **SSO user id** (`argocd_rbac_mappings`), `gitops_repo_url` (your fork), `region`, a unique `resources_prefix`, and `cluster_endpoint_public_access_cidrs` (your operator IP/CIDR - **required**
 ```
 
 2. Optional for use with Bedrock, adjust `litellm.yaml`, and update model_list:
@@ -118,7 +118,7 @@ For AWS European Sovereign Cloud
           aws_region_name: os.environ/AWS_REGION
           # ESC: LiteLLM defaults the Bedrock URL to
           # bedrock-runtime.<region>.amazonaws.com, which doesn't exist in the
-          # aws-eusc partition. Pin the ESC endpoint (amazonaws.eu domain — same
+          # aws-eusc partition. Pin the ESC endpoint (amazonaws.eu domain - same
           # family as STS/EKS/ECR). Reached over NAT on a public cluster.
           aws_bedrock_runtime_endpoint: https://bedrock-runtime.eusc-de-east-1.amazonaws.eu
 ```
@@ -141,7 +141,7 @@ For AWS European Sovereign Cloud
 #      - reads the model's config from Hugging Face and computes its VRAM +
 #        tensor-parallelism needs;
 #      - picks a cost-ranked GPU instance type allowed by your Karpenter NodePools;
-#      - scaffolds the matching endpoint CRD — VLLMEndpoint, or an LLMDEndpoint /
+#      - scaffolds the matching endpoint CRD - VLLMEndpoint, or an LLMDEndpoint /
 #        LLMDDisaggEndpoint for the llm-d scale tier (--tier, else auto-selected);
 #      - with --deploy: writes it to workloads/models/inference/<name>.yaml, then
 #        git commits + pushes and nudges ArgoCD to sync.
@@ -170,7 +170,7 @@ Example with fine tuning
 > computed from the model's memory footprint and current on-demand pricing. What
 > Karpenter actually launches is decided at provisioning time from *real* capacity:
 > it picks a compatible type from the GPU NodePool's allowed set based on what's
-> available in your region/AZs at that moment — so the node you get (and its
+> available in your region/AZs at that moment - so the node you get (and its
 > hourly cost) may differ from the recommendation. The model still fits and serves
 > correctly; only the specific instance may vary. To override the selection, you may specify  `--instance-type`.
 
@@ -194,7 +194,7 @@ Known Issues
 
 ## Beyond the basics
 
-**Serve a fine-tuned model.** Any HuggingFace model ID works — including a model
+**Serve a fine-tuned model.** Any HuggingFace model ID works - including a model
 you've fine-tuned and pushed to HF (public, or private with a token). Point a
 `VLLMEndpoint` (or `LLMDEndpoint`) at its HF ID and ship it with the same
 `git push` loop. The platform **serves** models; you bring the training (fine-tuning
@@ -209,19 +209,19 @@ prefix, and queue-depth signals, and supports prefill/decode disaggregation.
 start via three layers, wired through Terraform's image optimization and switched on
 by setting `docker_hub_username` (which enables the ECR pull-through cache): EBS
 image snapshots (near-instant image pull) and SOCI lazy-loading, plus an S3
-model-weight cache — pre-seed a model's HuggingFace weights there and the serving
+model-weight cache - pre-seed a model's HuggingFace weights there and the serving
 initContainer loads them from local disk instead of pulling from HuggingFace. Actual
 savings vary by model and instance.
 
 **Platform Health Agent.** The cluster dashboard can watch for failures, investigate
-them with an LLM, and propose a one-click fix — idle until you provide a Kiro key.
+them with an LLM, and propose a one-click fix - idle until you provide a Kiro key.
 See **[its guide](platform/services/cluster-dashboard/PLATFORM-HEALTH-AGENT.md)**.
 
 **Cost control.** Karpenter right-sizes and consolidates GPU nodes to match demand
 and reclaims them when workloads are removed; `shared: true` time-slices one
 physical GPU across up to 4 small models. The cluster dashboard's **Cost** view adds
-a **tokens-per-dollar** efficiency leaderboard per model — combining live LiteLLM
-throughput with the GPU/Bedrock cost basis the dashboard already tracks — so the
+a **tokens-per-dollar** efficiency leaderboard per model - combining live LiteLLM
+throughput with the GPU/Bedrock cost basis the dashboard already tracks - so the
 least cost-efficient models (and idle-but-billing ones) surface at a glance.
 
 **Staying current (EKS addons).** All EKS managed addons (vpc-cni, CoreDNS,
@@ -230,21 +230,21 @@ in Terraform, so `terraform apply` converges them to the latest version. To catc
 version falling behind *between* applies, a weekly **report-only** GitHub Action
 ([`.github/workflows/addon-freshness.yaml`](.github/workflows/addon-freshness.yaml))
 checks each managed addon against the newest available and opens a GitHub issue with
-the exact `update-addon` commands when any is behind — it never mutates the cluster.
+the exact `update-addon` commands when any is behind - it never mutates the cluster.
 It's scoped to EKS **managed addons only**; OSS components (LiteLLM, Open WebUI,
 Langfuse, etc.) stay operator-pinned. Enable it by setting the `ADDON_RECONCILER_*`
 repo variables (see the workflow header).
 
 **Team self-service (GitOps).** Onboard a team with an `AITeam` YAML in
-`workloads/teams/` — it creates a `team-<name>` namespace with a GPU quota, RBAC,
-namespace isolation (a default-deny **ingress** NetworkPolicy — only same-team and
+`workloads/teams/` - it creates a `team-<name>` namespace with a GPU quota, RBAC,
+namespace isolation (a default-deny **ingress** NetworkPolicy - only same-team and
 platform namespaces can reach in), and a scoped LiteLLM key (budget + rpm/tpm).
 Scaffold that YAML with `./platformctl onboard-team <name> [--gpu N --budget USD
---models a,b ...]` — it mirrors `new-model`: prints the manifest for review by
+--models a,b ...]` - it mirrors `new-model`: prints the manifest for review by
 default, and with `--deploy` writes it, commits, and pushes so ArgoCD applies it.
 The team then
 deploys models by committing a `VLLMEndpoint` under **`workloads/models/team-<name>/`**
-— the directory name is the target namespace, so models land in that team's quota
+- the directory name is the target namespace, so models land in that team's quota
 and key (no `kubectl`, no console; removal is `git rm`). By default workloads live
 in this repo; for real multi-team self-service point `gitops_workloads_repo_url` at
 a separate, tenant-owned repo so teams get write access to the workloads repo only,
@@ -252,9 +252,9 @@ never the platform repo. See [`workloads/models/README.md`](workloads/models/REA
 
 **Single sign-on, per-user cost & budgets.** SSO ships enabled (`enable_sso`,
 default on): Terraform stands up an **Amazon Cognito** user pool with a hosted login
-page, role groups (`admins`/`developers`/`users`), and three seed users — log in
+page, role groups (`admins`/`developers`/`users`), and three seed users - log in
 by email (`admin@example.com` / `developer@example.com` / `user@example.com`),
-whose generated passwords are the `sso_seed_user_passwords` Terraform output —
+whose generated passwords are the `sso_seed_user_passwords` Terraform output -
 retrieve them any time (the `up` output scrolls away) with:
 
 ```bash
@@ -266,13 +266,13 @@ WebUI forwards the signed-in identity so **cost is attributed per user** in
 LiteLLM's spend reports.
 LiteLLM also enforces a **default per-user budget + rpm/tpm throttle** on the chat
 path (from that forwarded identity, no keys needed) and caps any API key a user
-mints for themselves — tune the defaults in
+mints for themselves - tune the defaults in
 [`platform/services/litellm/litellm.yaml`](platform/services/litellm/litellm.yaml).
 It works out of the box over `./platformctl tunnel` (Cognito allows `localhost`
 callbacks); bring your own enterprise IdP by federating it into the pool. Cognito is
-the only new hard dependency — Identity Center stays required only for ArgoCD SSO.
+the only new hard dependency - Identity Center stays required only for ArgoCD SSO.
 For **public HTTPS** access (and to protect the dashboard behind auth), opt in to
-the CloudFront edge with `./platformctl edge cloudfront` — Terraform stands up a
+the CloudFront edge with `./platformctl edge cloudfront` - Terraform stands up a
 CloudFront **VPC origin** to the private ALB, with a free `*.cloudfront.net`
 certificate (no domain needed) and the Cognito callbacks wired automatically. For
 your own domain, `./platformctl edge domain` (internet-facing ALB + your ACM cert).
@@ -298,16 +298,16 @@ steps below. The script does **not** touch the bootstrap state (S3
 
 ### Things you'll hit (and the cause)
 
-* **`Error acquiring the state lock`** — a previous `terraform` run was
+* **`Error acquiring the state lock`** - a previous `terraform` run was
   killed mid-flight. Find the lock ID in the error and run
   `terraform -chdir=terraform/<stage> force-unlock -force <id>`.
 * **`kubernetes_namespace.ai_platform: Still destroying...`** for many
-  minutes — a `NetworkPolicy` finalizer (`networking.k8s.aws/resources`)
+  minutes - a `NetworkPolicy` finalizer (`networking.k8s.aws/resources`)
   is waiting for the VPC CNI controller, which has already been destroyed.
   Strip the finalizers manually:
   `kubectl get networkpolicies -n ai-platform -o name | xargs -I {} kubectl patch -n ai-platform {} --type=merge -p '{"metadata":{"finalizers":[]}}'`
-* **`ECR Repository ... not empty`** — empty it with `aws ecr batch-delete-image`, then re-run.
-* **Subnet stuck destroying for 15+ min** — almost always an orphan
+* **`ECR Repository ... not empty`** - empty it with `aws ecr batch-delete-image`, then re-run.
+* **Subnet stuck destroying for 15+ min** - almost always an orphan
   Karpenter EC2 instance still pinning the subnet; terminate it, then re-run.
 
 When in doubt, the final state should match this:
