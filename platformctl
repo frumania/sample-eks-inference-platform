@@ -428,7 +428,7 @@ _status_check() {
       warn "Model call ($first_model) returned HTTP $code — check model access (Bedrock: per-account console toggle) / config"
     fi
   else
-    warn "No models found in /v1/models — skipping chat test"
+    warn "No models registered in /v1/models yet — expected before you deploy one. Add a model with ./platformctl new-model (or configure a Bedrock model in litellm.yaml). Skipping the chat test."
   fi
   if kubectl run pfcheck-langfuse --rm -i --restart=Never --image=curlimages/curl:8.11.0 -n "$NS_PLATFORM" --quiet -- \
        -fsS http://langfuse-web.ai-platform.svc.cluster.local:3000/api/public/health >/dev/null 2>&1; then
@@ -438,6 +438,10 @@ _status_check() {
   fi
 
   [ -n "${pf_pid:-}" ] && kill "$pf_pid" 2>/dev/null || true
+  # --check reports health via ok/warn lines; a warning (e.g. no models yet, or
+  # Langfuse still starting) is not a failure, so always exit 0. Hard failures
+  # use die (non-zero) explicitly earlier.
+  return 0
 }
 
 # ---- tunnel ---------------------------------------------------------------- #

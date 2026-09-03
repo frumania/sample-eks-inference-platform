@@ -2,7 +2,7 @@
 
 **Run every AI model your teams need - behind one API, in your own AWS account.**
   
-A self-service platform that lets teams use large language models the way they ship code: commit a few lines of YAML, git push, and the platform handles the rest - GPUs, serving, scaling, routing, and monitoring. Use frontier models from Amazon Bedrock on day one with no GPUs to manage or deploy open-source or fine-tuned models, provisioned and served automatically.
+A self-service platform that lets teams use large language models the way they ship code: commit a few lines of YAML, git push, and the platform handles the rest - GPUs, serving, scaling, routing, and monitoring. Use frontier **models from Amazon Bedrock** on day one with no GPUs to manage or **deploy open-source models**, provisioned and served automatically.
   
 And it all runs in your account and region - including the AWS European Sovereign Cloud - so your data and models stay where you control them.
   
@@ -10,9 +10,9 @@ Why teams like it:
   
 - One API for every model. A single OpenAI-compatible endpoint fronts both Amazon Bedrock and your own Hugging Face / fine-tuned
 models - switch models by changing one string, not your code. Use in your IDE/tooling of choice e.g. Cline etc.
-- Production-ready by design, with dashboards and tooling out-of the box (langfuse, grafana, argo, litellm UI, Open WebUI)
-- Governance without the glue work. Each team gets its own API key, budget, and rate limits, with per-user cost tracking and
-request tracing built in - so you can safely open it up to many teams.
+- Production-ready by design, with dashboards and tooling out-of the box (Langfuse, Grafana, ArgoCD, LitellmUI, Open WebUI)
+- Governance at scale. Each team gets its own API key, budget, and rate limits, with per-user cost tracking and
+request tracing built in - so you can safely adjust it to your organizational needs.
 - Ship models like code. Adding, updating, or removing a model is a YAML commit that ArgoCD deploys - no consoles, no tickets, no
 bespoke infra scripts.
 - The hard GPU parts, handled. Right-sizing, autoscaling, multi-GPU parallelism, and scale-out routing come from a few reusable
@@ -64,7 +64,7 @@ tracing apply uniformly - including the optional **llm-d** scale tier
 - A **fork of this repo** that ArgoCD can read - its URL goes in `gitops_repo_url`
 
 **AWS account setup**:
-- (Optional) If using EKS Managed Capabilities (`eks_capabilities` = true = default):
+- (Optional) If using EKS Managed Capabilities (`eks_capabilities = true` = default):
   An **IAM Identity Center** instance for managed ArgoCD - its ARN and the SSO user who should get
   ArgoCD admin go in the tfvars (`argocd_idc_instance_arn`, `argocd_idc_region`,
   and `argocd_rbac_mappings`). **Its region can differ from your deploy `region`**
@@ -131,7 +131,7 @@ For AWS European Sovereign Cloud
 
 4. Test - no GPUs yet (up already pointed kubectl at the new cluster)
 ```bash
-./platformctl tunnel        # forward the UIs (WebUI / LiteLLM / Langfuse)
+./platformctl tunnel        # forward the UIs (WebUI / LiteLLM / Langfuse / Grafana / ArgoCD)
 ./platformctl status --check  # verify Bedrock + models answer AND Langfuse tracing works
 ```
 

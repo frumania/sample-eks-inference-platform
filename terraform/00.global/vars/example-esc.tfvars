@@ -11,7 +11,7 @@ shared_config = {
 # Operator CIDR allowlist for the EKS PUBLIC API endpoint. REQUIRED whenever
 # private_eks_cluster = false (below): a plan-time check refuses to expose the
 # control plane to 0.0.0.0/0. Set this to the public egress IP/CIDR(s) you run
-# platformctl/kubectl from (office, VPN, CI). Uncomment and replace:
+# platformctl/kubectl from (office, VPN, CI). REPLACE:
 # e.g. as given by https://www.whatismyip.com/
 
 cluster_endpoint_public_access_cidrs = ["<Your IP>"]
@@ -43,8 +43,7 @@ cluster_config = {
     blockstorage  = true # EBS CSI Driver
     loadbalancing = true # LB Controller
 
-    # Do not use EKS Managed Capabilities (AWS-managed gitops/argocd, kro, ack). Are created via Helm automatically instead.
-    eks_capabilities = false # NOT available in the ESC partition
+    eks_capabilities = false # NOT available in the ESC partition, are created via Helm automatically instead
 
     gitops = true # ON = ArgoCD + pipeline
     kro    = true # ON = required by gitops/ArgoCD
@@ -73,7 +72,7 @@ observability_configuration = {
 # Application (a Helm app-of-apps) and passes this URL down as a Helm value, so
 # every ApplicationSet inherits it — no other git file to edit.
 
-gitops_repo_url = "https://github.com/YOUR-ORG/YOUR-REPO.git"
+gitops_repo_url = "https://github.com/YOUR-ORG/REPLACE-WITH-YOUR-REPO.git"
 gitops_revision = "main"
 
 # Self-service workloads repo (optional). Leave empty (default) to keep models/,
