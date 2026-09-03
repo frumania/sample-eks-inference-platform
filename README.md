@@ -1,23 +1,24 @@
 # Inference Platform on Amazon EKS
 
-**A self-service, multi-tenant inference platform for your own AWS account.** One
-OpenAI-compatible API fronts every model — Amazon Bedrock and any Hugging Face
-model served on GPUs — with per-team keys, budgets, and rate limits. Teams ship models the way
-they ship code: commit a short YAML, `git push`, and the platform handles GPU
-provisioning, serving, routing, and observability. A frontier model
-(**Bedrock Claude Opus 4.8**) works on day one with **zero GPUs**.
-
-**Two things make it work:**
-
-- **One gateway, every model.** LiteLLM puts Bedrock and any vLLM-served Hugging
-  Face model (including your fine-tuned ones) behind a single
-  `/v1/chat/completions` endpoint — with team isolation, budgets, and Langfuse
-  tracing built in.
-- **Extendable templates.** Four [KRO](https://kro.run) resources
-  (`VLLMEndpoint`, `LLMDEndpoint`, `LLMDDisaggEndpoint`, `AITeam`)
-  capture the hard parts — tensor-parallelism, GPU sizing, elastic autoscaling,
-  scale-tier routing, prefill/decode disaggregation — as a few lines of YAML.
-  They're the platform's API: fork and extend them, don't reinvent them.
+**Run every AI model your teams need - behind one API, in your own AWS account.**
+  
+A self-service platform that lets teams use large language models the way they ship code: commit a few lines of YAML, git push, and the platform handles the rest — GPUs, serving, scaling, routing, and monitoring. Use frontier models from Amazon Bedrock on day one with no GPUs to manage or deploy open-source or fine-tuned models, provisioned and served automatically.
+  
+And it all runs in your account and region — including the AWS European Sovereign Cloud — so your data and models stay where you control them.
+  
+Why teams like it:
+  
+- One API for every model. A single OpenAI-compatible endpoint fronts both Amazon Bedrock and your own Hugging Face / fine-tuned
+models — switch models by changing one string, not your code. Use in your IDE/tooling of choice e.g. Cline etc.
+- Production-ready by design, with dashboards and tooling out-of the box (langfuse, grafana, argo, litellm UI, Open WebUI)
+- Governance without the glue work. Each team gets its own API key, budget, and rate limits, with per-user cost tracking and
+request tracing built in — so you can safely open it up to many teams.
+- Ship models like code. Adding, updating, or removing a model is a YAML commit that ArgoCD deploys — no consoles, no tickets, no
+bespoke infra scripts.
+- The hard GPU parts, handled. Right-sizing, autoscaling, multi-GPU parallelism, and scale-out routing come from a few reusable
+templates, so you get production-grade serving from a short spec instead of deep Kubernetes/vLLM expertise.
+- Costs stay in check. GPUs scale to demand and are reclaimed when idle, small models can share a GPU, and a dashboard shows
+tokens-per-dollar per model.
 
 **Stack:** EKS Managed Capabilities (ArgoCD · KRO · ACK) · Karpenter · vLLM ·
 LiteLLM · Langfuse — with an optional **llm-d + Gateway API Inference
@@ -44,18 +45,7 @@ The custom resources **are** the self-service interface:
 | **`LLMDDisaggEndpoint`** | Serve on the llm-d scale + performance tier — independently autoscaled prefill/decode pools (same llm-d substrate; no toggle) |
 | **`AITeam`** | Onboard a team: namespace, RBAC, budget, rate limits, scoped API key |
 
-```yaml
-# That's the whole interface — e.g. serve a model:
-apiVersion: kro.run/v1alpha1
-kind: VLLMEndpoint
-metadata: { name: qwen3-3b, namespace: inference }
-spec:
-  model: "Qwen/Qwen2.5-3B-Instruct"   # ungated — no token needed
-  gpuCount: 1                          # 1/2/4/8 → vLLM tensor parallelism
-  shared: false                        # true → time-slice one GPU across up to 4 small models
-```
-
-Bedrock models need no resource — they're a few lines of LiteLLM config, live the
+Bedrock models need no resource - they're a few lines of LiteLLM config (`litellm.yaml`), live the
 moment the cluster is up. KRO definitions live in `platform/config/kro/`; extend
 them there and every model/team inherits the change.
 
@@ -71,9 +61,11 @@ tracing apply uniformly — including the optional **llm-d** scale tier
 - **AWS CLI v2** with credentials configured (`aws sts get-caller-identity` must work), plus the
   [Session Manager plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) (for `./platformctl tunnel`)
 - **Terraform**, **kubectl**, **make**, **jq**, **git**, and **python3** with **boto3**
+- A **fork of this repo** that ArgoCD can read — its URL goes in `gitops_repo_url`
 
 **AWS account setup**:
-- An **IAM Identity Center** instance — its ARN and the SSO user who should get
+- (Optional) If using EKS Managed Capabilities (`eks_capabilities` = true = default):
+  An **IAM Identity Center** instance for managed ArgoCD — its ARN and the SSO user who should get
   ArgoCD admin go in the tfvars (`argocd_idc_instance_arn`, `argocd_idc_region`,
   and `argocd_rbac_mappings`). **Its region can differ from your deploy `region`**
   — Identity Center is one instance per account (often in a different region than
@@ -88,27 +80,12 @@ tracing apply uniformly — including the optional **llm-d** scale tier
   aws identitystore list-users --identity-store-id <d-xxxx> --region <idc-region> \
     --query 'Users[].[UserName,UserId]' --output text
   ```
-- **Amazon Bedrock model access** enabled in your region (for the day-one Claude Opus — enable it in the Bedrock console)
-- Enough **service quota** for the GPU instance types you plan to self-host on (not needed for the Bedrock-only path)
-- A **fork of this repo** that ArgoCD can read — its URL goes in `gitops_repo_url`
-
-**Configure** — copy `terraform/00.global/vars/example.tfvars` to `<env>.tfvars` and fill the `REPLACE` markers: your Identity Center ARN + **its region** (`argocd_idc_region`, may differ from `region`) + your **SSO user id** (`argocd_rbac_mappings`), `gitops_repo_url` (your fork), `region`, a unique `resources_prefix`, and `cluster_endpoint_public_access_cidrs` (your operator IP/CIDR — **required**, see below).
-
-> Keep `private_eks_cluster = false` (the default). A private-only cluster's API is
-> reachable only from inside the VPC, so `./platformctl up` from a laptop can't
-> provision it — the Kubernetes resources time out on the private endpoint. Only
-> set it `true` if you run Terraform from an in-VPC host (bastion / CloudShell-in-VPC / VPN).
-
-> **Required with `private_eks_cluster = false`:** set `cluster_endpoint_public_access_cidrs`
-> to the public egress IP/CIDR(s) you run `platformctl`/`kubectl` from (e.g.
-> `["203.0.113.10/32"]` — find yours with `curl -s https://checkip.amazonaws.com`).
-> A plan-time check **fails closed** if this is empty or `0.0.0.0/0`, so the public
-> API endpoint is never left open to the internet. Add office/VPN/CI ranges as
-> needed; if your egress IP changes later, update this and re-run `./platformctl up`.
+- (Optional) If using **Amazon Bedrock models**. Enable desired model(s) and specify in `litellm.yaml`.
+- (Optional) For any **self deployed model**, sufficient **service quota** for the GPU instance types you plan to self-host on (not needed for the Bedrock-only path)
 
 ## Quick start
 
-> ⚠️ **Before you deploy — this creates real, billable infrastructure in your AWS
+> ⚠️ **Before you deploy - this creates real, billable infrastructure in your AWS
 > account.** It provisions an EKS cluster and (on demand) GPU nodes. The platform
 > UIs sit behind an **internal ALB** by default (no public IP) — reach them via
 > `./platformctl tunnel` or the opt-in CloudFront edge. If you switch the ALB to
@@ -118,20 +95,49 @@ tracing apply uniformly — including the optional **llm-d** scale tier
 > everything when finished. See [SECURITY.md](SECURITY.md).
 
 
+1. Configure: Copy the template, then set your gitops repo URL, and region.
 ```bash
-# 1. Configure: copy the template, then set your Identity Center ARN, gitops repo URL, and region.
-cd terraform/00.global/vars && cp example.tfvars dev.tfvars   # edit dev.tfvars — fill every REPLACE marker
+cd terraform/00.global/vars && cp example.tfvars dev.tfvars   
+# edit dev.tfvars — fill every REPLACE marker e.g. your Identity Center ARN + **its region** (`argocd_idc_region`, may differ from `region`) + your **SSO user id** (`argocd_rbac_mappings`), `gitops_repo_url` (your fork), `region`, a unique `resources_prefix`, and `cluster_endpoint_public_access_cidrs` (your operator IP/CIDR — **required**
+```
 
-# 2. Provision everything (VPC → EKS + capabilities → Karpenter → secrets).
+2. Optional for use with Bedrock, adjust `litellm.yaml`, and update model_list:
+
+```yaml
+- model_name: opus-4-8
+        litellm_params:
+          model: bedrock/global.anthropic.claude-opus-4-8
+          aws_region_name: os.environ/AWS_REGION
+```
+
+For AWS European Sovereign Cloud
+```yaml
+- model_name: nova-lite
+        litellm_params:
+          model: bedrock/amazon.nova-lite-v1:0
+          aws_region_name: os.environ/AWS_REGION
+          # ESC: LiteLLM defaults the Bedrock URL to
+          # bedrock-runtime.<region>.amazonaws.com, which doesn't exist in the
+          # aws-eusc partition. Pin the ESC endpoint (amazonaws.eu domain — same
+          # family as STS/EKS/ECR). Reached over NAT on a public cluster.
+          aws_bedrock_runtime_endpoint: https://bedrock-runtime.eusc-de-east-1.amazonaws.eu
+```
+
+3. Provision everything (VPC → EKS + capabilities → Karpenter → secrets).
+```bash
 #    platformctl reads `region` from dev.tfvars and pins AWS_REGION for you.
 ./platformctl up dev
+```
 
-# 3. Use it immediately — no GPUs yet (up already pointed kubectl at the new cluster).
+4. Test - no GPUs yet (up already pointed kubectl at the new cluster)
+```bash
 ./platformctl tunnel        # forward the UIs (WebUI / LiteLLM / Langfuse)
 ./platformctl status --check  # verify Bedrock + models answer AND Langfuse tracing works
+```
 
-# 4. Deploy a self-hosted model with one command. `new-model` right-sizes it and
-#    ships it end to end:
+5. Deploy a self-hosted model with one command. 
+```bash
+# `new-model` right-sizes it and ships it end to end:
 #      - reads the model's config from Hugging Face and computes its VRAM +
 #        tensor-parallelism needs;
 #      - picks a cost-ranked GPU instance type allowed by your Karpenter NodePools;
@@ -145,12 +151,20 @@ cd terraform/00.global/vars && cp example.tfvars dev.tfvars   # edit dev.tfvars 
 kubectl get vllmendpoints -n inference -w                   # watch it come up (GPU cold start ~ a few min)
 ```
 
-Drop `--deploy` to just print the recommendation and the ready-to-commit YAML for
-review (nothing is pushed). Size for your traffic with `--seq`, `--users`, or
-`--workload`, force a serving tier with `--tier`, or point at a private/gated model
-with `--hf-token` — see `./platformctl new-model --help` for all flags. Removing a
-model is the mirror image: `./platformctl new-model <name> --undeploy` (or just
-`git rm` its YAML).
+Drop `--deploy` to just print the recommendation and the ready-to-commit YAML for review (nothing is pushed). 
+
+Size for your traffic with `--seq`, `--users`, or `--workload`, force a serving tier with `--tier`, or point at a private/gated model
+with `--hf-token`. See `./platformctl new-model --help` for all flags. 
+
+Example with fine tuning
+```bash
+./platformctl new-model Qwen/Qwen3.8-27B-FP8 --tp 8 --seq 32768 --quant fp8 \
+  --instance-type g6.48xlarge --worker-memory 120Gi \
+  --tool-call-parser qwen3_xml \
+  --extra-arg '["--reasoning-parser","qwen3","--kv-cache-dtype","fp8","--enable-prefix-caching"]' \
+  --deploy \
+  --hf-token <your-hf-token>
+```
 
 > ⚠️ **The recommended instance type is a sizing guide, not a guarantee.** It's
 > computed from the model's memory footprint and current on-demand pricing. What
@@ -158,9 +172,25 @@ model is the mirror image: `./platformctl new-model <name> --undeploy` (or just
 > it picks a compatible type from the GPU NodePool's allowed set based on what's
 > available in your region/AZs at that moment — so the node you get (and its
 > hourly cost) may differ from the recommendation. The model still fits and serves
-> correctly; only the specific instance may vary.
+> correctly; only the specific instance may vary. To override the selection, you may specify  `--instance-type`.
 
----
+6. Removing a model 
+
+Folder `workloads/models/inference`
+```bash
+`./platformctl new-model <yaml-name> --undeploy
+```
+
+## AWS European Sovereign Cloud
+
+Check `example-esc.tfvars` for a working deployment config!
+
+Known Issues
+
+- Public ECR Repo equivalent not available. Karpenter, ACK, aws-application-networking (LB/Gateway), eks-distro will be loaded from `public.ecr.aws`.
+- Requires NAT Gateway
+- EKS Managed Capability not available - add-ons will be installed via Helm automtically `eks_capabilities = false`
+- Bedrock: Limited models available, make sure to adjust `litellm.yaml`
 
 ## Beyond the basics
 
