@@ -4,9 +4,9 @@
   
 A self-service platform that lets teams use large language models the way they ship code: commit a few lines of YAML, git push, and the platform handles the rest - GPUs, serving, scaling, routing, and monitoring. Use frontier **models from Amazon Bedrock** on day one with no GPUs to manage or **deploy open-source models**, provisioned and served automatically.
   
-And it all runs in your account and region - including the AWS European Sovereign Cloud - so your data and models stay where you control them.
+And it all runs in your AWS account and AWS region - including the AWS European Sovereign Cloud - so your data and models stay where you control them.
   
-Why teams like it:
+Key Features:
   
 - One API for every model. A single OpenAI-compatible endpoint fronts both Amazon Bedrock and your own Hugging Face / fine-tuned
 models - switch models by changing one string, not your code. Use in your IDE/tooling of choice e.g. Cline etc.
@@ -17,8 +17,6 @@ request tracing built in - so you can safely adjust it to your organizational ne
 bespoke infra scripts.
 - The hard GPU parts, handled. Right-sizing, autoscaling, multi-GPU parallelism, and scale-out routing come from a few reusable
 templates, so you get production-grade serving from a short spec instead of deep Kubernetes/vLLM expertise.
-- Costs stay in check. GPUs scale to demand and are reclaimed when idle, small models can share a GPU, and a dashboard shows
-tokens-per-dollar per model.
 
 **Stack:** EKS Managed Capabilities (ArgoCD · KRO · ACK) · Karpenter · vLLM ·
 LiteLLM · Langfuse - with an optional **llm-d + Gateway API Inference
