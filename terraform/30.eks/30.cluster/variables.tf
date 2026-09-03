@@ -145,3 +145,27 @@ variable "region" {
   type        = string
   default     = null
 }
+
+variable "argocd_helm_chart_version" {
+  description = "Helm chart version for the self-managed ArgoCD install (argo/argo-cd), used ONLY when cluster_config.capabilities.eks_capabilities = false (e.g. AWS European Sovereign Cloud, where EKS Managed Capabilities are unavailable). Empty string installs the latest chart version (matches a plain `helm install`); pin it for reproducible deploys."
+  type        = string
+  default     = ""
+}
+
+variable "kro_helm_chart_version" {
+  description = "Helm chart version for the self-managed KRO install (oci://registry.k8s.io/kro/charts/kro), used ONLY when cluster_config.capabilities.eks_capabilities = false. Empty string installs the latest chart version; pin it for reproducible deploys (recommended for OCI charts)."
+  type        = string
+  default     = ""
+}
+
+variable "ack_service_controllers" {
+  description = "ACK controllers to self-install via Helm when eks_capabilities = false AND cluster_config.capabilities.ack = true (mirrors what the managed ACK capability would provide, gated on the same flag). Map of AWS service name (e.g. \"s3\", \"rds\", \"ec2\", \"iam\") to the IAM policy ARNs that controller needs (see each service's ACK 'recommended-policy-arn'). Each entry installs oci://public.ecr.aws/aws-controllers-k8s/<svc>-chart into the ack-system namespace with an IRSA role bound to its ack-<svc>-controller ServiceAccount. Empty map installs nothing (ack has no self-managed effect). Ignored when eks_capabilities = true."
+  type        = map(list(string))
+  default     = {}
+}
+
+variable "ack_helm_chart_version" {
+  description = "Optional pinned chart version applied to every self-installed ACK controller (empty = latest per controller). Pinning is recommended for OCI charts. Used only when eks_capabilities = false and ack = true."
+  type        = string
+  default     = ""
+}

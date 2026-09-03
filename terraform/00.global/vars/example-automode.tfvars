@@ -30,6 +30,7 @@ cluster_config = {
 
   # Required when gitops = true
   # See: https://docs.aws.amazon.com/eks/latest/userguide/argocd.html
+
   capabilities_config = {
     argocd_idc_instance_arn = "arn:aws:sso:::instance/ssoins-XXXXXXXXXX" # REPLACE
     argocd_idc_region       = "us-east-1"                                # REPLACE
@@ -58,6 +59,7 @@ observability_configuration = {
 # When you FORK, also set the same URL/branch in argocd/bootstrap/platform.yaml
 # ($repo/$rev) and argocd/bootstrap/workloads.yaml (repoURL) — ArgoCD generators
 # can't read this tfvar. See those files' headers for the fork checklist.
+
 gitops_repo_url = "https://github.com/YOUR-ORG/YOUR-REPO.git"
 gitops_revision = "main"
 

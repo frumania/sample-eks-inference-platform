@@ -112,10 +112,23 @@ def main(argv: list[str] | None = None) -> int:
                         "--tool-call-parser NAME). Default: auto-detected from the "
                         "model architecture. Pass 'none' to force chat-only (disable "
                         "tool calling).")
-    p.add_argument("--reasoning-parser", default=None, metavar="NAME",
-                   help="Set the vLLM reasoning parser (e.g. qwen3, deepseek_r1). "
-                        "There is no dedicated CRD field, so it is appended to "
-                        "extraArgs as `--reasoning-parser NAME`.")
+    p.add_argument("--worker-memory", default=None, metavar="SIZE",
+                   help="Override the auto-computed workerMemory (container memory "
+                        "request/limit), e.g. 120Gi. The auto value (~weights+4Gi) can "
+                        "be too low for high tensor-parallel degrees (many worker procs "
+                        "+ torch.compile spike) and cause an OOMKill (exit 137).")
+    p.add_argument("--extra-arg", action="append", default=None, metavar="ARG",
+                   dest="extra_arg",
+                   help="Append raw token(s) to the endpoint's extraArgs (verbatim to "
+                        "`vllm serve`). Two forms, mixable/repeatable:\n"
+                        "  1) A JSON array of tokens (cleanest for several flags), e.g. "
+                        "--extra-arg '[\"--reasoning-parser\",\"qwen3\",\"--kv-cache-dtype\",\"fp8\",\"--enable-prefix-caching\"]' "
+                        "— expanded in order.\n"
+                        "  2) A single literal token; repeat the flag for more. For tokens "
+                        "starting with a dash use the = form so argparse doesn't treat them "
+                        "as options, e.g. --extra-arg=--kv-cache-dtype --extra-arg=fp8. "
+                        "A JSON object value (e.g. a --speculative-config payload) is kept "
+                        "as one literal token, not expanded.")
     p.add_argument("--tier", choices=["auto", "vllm", "llm-d", "llm-d-disagg"], default="auto",
                    help="Serving CRD to emit: vllm=VLLMEndpoint, llm-d=LLMDEndpoint "
                         "(scale tier), llm-d-disagg=LLMDDisaggEndpoint (prefill/decode split). "

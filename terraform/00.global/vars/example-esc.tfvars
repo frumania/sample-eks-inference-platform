@@ -1,13 +1,6 @@
-# VPC CIDR for the platform network. The ALB frontend security group
-# (terraform/30.eks/30.cluster/alb-security-group.tf) derives its in-VPC allow
-# rules from this automatically, so the CloudFront edge + SSM tunnel keep working
-# whatever you set here — no manifest edits needed.
 vpc_cidr = "10.10.0.0/16"
 
-# AWS region to deploy this environment into. platformctl pins AWS_REGION from
-# this so Terraform, kubeconfig, and the CLI stay on the same region, and derives
-# the cluster name (<resources_prefix>-<env>) for use/status/tunnel.
-region = "us-east-1" # REPLACE with your region, e.g. eu-central-1
+region = "eusc-de-east-1"
 
 tags = {}
 
@@ -19,7 +12,9 @@ shared_config = {
 # private_eks_cluster = false (below): a plan-time check refuses to expose the
 # control plane to 0.0.0.0/0. Set this to the public egress IP/CIDR(s) you run
 # platformctl/kubectl from (office, VPN, CI). Uncomment and replace:
-#   cluster_endpoint_public_access_cidrs = ["203.0.113.10/32"]
+# e.g. as given by https://www.whatismyip.com/
+
+cluster_endpoint_public_access_cidrs = ["<Your IP>"]
 
 cluster_config = {
   kubernetes_version = "1.36"
@@ -34,8 +29,9 @@ cluster_config = {
   # VPC) — a laptop over the public internet CANNOT provision it (the kubernetes/
   # kubectl/helm resources will time out on the private endpoint). Leave false
   # unless you have that in-VPC path.
+
   private_eks_cluster = false
-  
+
   create_mng_system   = true # Required when not using auto mode — runs Karpenter, CoreDNS, VPC CNI
 
   capabilities = {
@@ -47,37 +43,17 @@ cluster_config = {
     blockstorage  = true # EBS CSI Driver
     loadbalancing = true # LB Controller
 
-    # EKS Managed Capabilities (AWS-managed, run in AWS-owned infrastructure)
-    gitops = true # ArgoCD — requires Identity Center (see capabilities_config)
-    kro    = true # Kube Resource Orchestrator
-    ack    = true # AWS Controllers for Kubernetes
-  }
+    # Do not use EKS Managed Capabilities (AWS-managed gitops/argocd, kro, ack). Are created via Helm automatically instead.
+    eks_capabilities = false # NOT available in the ESC partition
 
-  # Required when gitops = true
-  # See: https://docs.aws.amazon.com/eks/latest/userguide/argocd.html
-  #
-  # IAM Identity Center is ONE instance per account and is often enabled in a
-  # different region than where you deploy this platform. argocd_idc_region is
-  # therefore INDEPENDENT of `region` above — set it to the region your Identity
-  # Center instance actually lives in (it may or may not match your deploy region).
-  # Discover the instance ARN + identity store, and a user id, with:
-  #   for r in us-east-1 us-west-2 eu-west-1 eu-central-1; do \
-  #     aws sso-admin list-instances --region $r \
-  #       --query 'Instances[].[InstanceArn,IdentityStoreId]' --output text; done
-  #   aws identitystore list-users --identity-store-id <d-xxxx> --region <idc-region> \
-  #     --query 'Users[].[UserName,UserId]' --output text
-  
-  capabilities_config = {
-    argocd_idc_instance_arn = "arn:aws:sso:::instance/ssoins-XXXXXXXXXX" # REPLACE
-    argocd_idc_region       = "us-east-1"                                # REPLACE — the Identity Center instance's region (may differ from `region`)
-    argocd_rbac_mappings = [
-      {
-        role = "ADMIN"
-        identities = [
-          { id = "REPLACE-WITH-SSO-USER-ID", type = "SSO_USER" } # REPLACE — a UserId from `aws identitystore list-users` above (NOT the user name)
-        ]
-      }
-    ]
+    gitops           = true  # ON = ArgoCD + pipeline
+    kro              = true  # ON = required by gitops/ArgoCD
+
+    # ack              = true # optional, unused by this solution
+    # ack_service_controllers = {
+    #   s3  = ["arn:aws:iam::aws:policy/AmazonS3FullAccess"]
+    #   ec2 = ["arn:aws:iam::aws:policy/AmazonEC2FullAccess"]
+    # }
   }
 }
 

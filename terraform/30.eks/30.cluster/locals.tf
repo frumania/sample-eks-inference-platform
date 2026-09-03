@@ -24,6 +24,10 @@ locals {
   private_subnet_ids       = data.terraform_remote_state.vpc.outputs.private_subnet_ids
   control_plane_subnet_ids = try(var.cluster_config.use_intra_subnets, true) ? data.terraform_remote_state.vpc.outputs.intra_subnet_ids : local.private_subnet_ids
 
+  # Resolved once so kro can default to it (the gitops workloads layer needs KRO)
+  # without a self-reference inside the capabilities map below.
+  gitops_enabled = try(var.cluster_config.capabilities.gitops, true)
+
   capabilities = {
     kube_proxy   = try(var.cluster_config.capabilities.kube_proxy, !local.eks_auto_mode, true)
     networking   = try(var.cluster_config.capabilities.networking, !local.eks_auto_mode, true)
@@ -31,9 +35,15 @@ locals {
     identity     = try(var.cluster_config.capabilities.identity, !local.eks_auto_mode, true)
     autoscaling  = try(var.cluster_config.capabilities.autoscaling, !local.eks_auto_mode, true)
     blockstorage = try(var.cluster_config.capabilities.blockstorage, !local.eks_auto_mode, true)
-    # EKS Managed Capabilities (AWS-managed, not self-managed)
-    gitops = try(var.cluster_config.capabilities.gitops, false)
-    kro    = try(var.cluster_config.capabilities.kro, false)
+    # EKS Managed Capabilities (AWS-managed, not self-managed).
+    # gitops defaults TRUE (ArgoCD app-of-apps — the platform layer). kro defaults
+    # to whatever gitops is: the gitops WORKLOADS layer (VLLMEndpoint / LLMDEndpoint
+    # / LLMDDisaggEndpoint / AITeam) are KRO ResourceGraphDefinitions, so a gitops
+    # platform can't serve self-hosted models or onboard teams without KRO. Still
+    # explicitly overridable (e.g. kro = false for a Bedrock-only gitops install).
+    # ack defaults false (optional, unused by this solution).
+    gitops = local.gitops_enabled
+    kro    = try(var.cluster_config.capabilities.kro, local.gitops_enabled)
     ack    = try(var.cluster_config.capabilities.ack, false)
   }
 

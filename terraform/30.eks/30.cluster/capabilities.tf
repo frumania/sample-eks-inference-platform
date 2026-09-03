@@ -406,7 +406,7 @@ resource "kubernetes_secret" "argocd_cluster" {
     },
   )
 
-  depends_on = [aws_eks_capability.argocd]
+  depends_on = [aws_eks_capability.argocd, helm_release.argocd_selfmanaged]
 }
 
 ################################################################################
@@ -440,6 +440,7 @@ resource "kubectl_manifest" "argocd_bootstrap" {
 
   depends_on = [
     aws_eks_capability.argocd,
+    helm_release.argocd_selfmanaged,
     kubernetes_secret.argocd_cluster,
   ]
 }

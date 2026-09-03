@@ -988,6 +988,59 @@ def _valid_parser_name(value: str, flag: str) -> str:
     return value
 
 
+# workerMemory / other Kubernetes quantities (e.g. 120Gi, 56Gi, 8G). Validated
+# before interpolation into the manifest.
+_QUANTITY_RE = re.compile(r"^\d+(\.\d+)?(Ei|Pi|Ti|Gi|Mi|Ki|E|P|T|G|M|K)?$")
+
+
+def _valid_quantity(value: str, flag: str) -> str:
+    v = value.strip()
+    if not _QUANTITY_RE.match(v):
+        sys.exit(f"error: invalid {flag} value {value!r} "
+                 f"(expected a Kubernetes quantity like 120Gi, 56Gi, or 8G).")
+    return v
+
+
+def _yaml_scalar(v: str) -> str:
+    """Quote an arbitrary extraArgs token safely for YAML. Handles values that
+    contain double quotes (e.g. JSON like {\"method\":\"mtp\"}) by using single
+    quotes; rejects newlines to prevent manifest injection."""
+    if "\n" in v or "\r" in v:
+        sys.exit(f"error: --extra-arg value must not contain newlines: {v!r}")
+    if '"' in v and "'" not in v:
+        return f"'{v}'"
+    if "'" in v and '"' not in v:
+        return f'"{v}"'
+    if '"' not in v and "'" not in v:
+        return f'"{v}"'
+    # Both quote styles present — escape within a double-quoted scalar.
+    return '"' + v.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def _expand_extra_args(raw: list) -> list[str]:
+    """Turn --extra-arg values into an ordered token list. A value that is a
+    JSON array (starts with '[') is parsed and its elements are appended in
+    order (the clean one-flag form). Any other value — including a JSON object
+    like a --speculative-config payload — is kept as a single literal token."""
+    out: list[str] = []
+    for item in raw:
+        s = item.strip() if isinstance(item, str) else item
+        if isinstance(s, str) and s.startswith("["):
+            try:
+                parsed = json.loads(s)
+            except ValueError:
+                sys.exit(f"error: --extra-arg looks like a JSON array but did not parse: {item!r}")
+            if not isinstance(parsed, list):
+                sys.exit(f"error: --extra-arg JSON must be an array of tokens: {item!r}")
+            for el in parsed:
+                if isinstance(el, bool) or not isinstance(el, (str, int, float)):
+                    sys.exit(f"error: --extra-arg array elements must be strings or numbers, got {el!r}")
+                out.append(str(el))
+        else:
+            out.append(item)
+    return out
+
+
 def build_endpoint_yaml(
     kind: str,
     model: ModelSpec, vram: VramEstimate, best: Option,
@@ -1066,7 +1119,11 @@ def build_endpoint_yaml(
 
     lines.append(f"  maxModelLen: {max_len}")
     lines.append(f"  minVramPerGpuGiB: {min_vram_gib}")
-    lines.append(f'  workerMemory: "{worker_mem_gib}Gi"')
+    wm_override = getattr(args, "worker_memory", None)
+    if wm_override:
+        lines.append(f'  workerMemory: "{_valid_quantity(wm_override, "--worker-memory")}"   # set via --worker-memory')
+    else:
+        lines.append(f'  workerMemory: "{worker_mem_gib}Gi"')
 
     if is_disagg:
         # Disaggregated scale tier: prefill (compute-bound) and decode (KV-cache/
@@ -1145,14 +1202,13 @@ def build_endpoint_yaml(
     if parser:
         lines.append(f"  toolCallParser: {parser}   # {origin} — enables tool calling; remove for chat-only")
 
-    # Reasoning parser has no dedicated CRD field — pass it through extraArgs,
-    # which every tier appends verbatim to `vllm serve` (--reasoning-parser NAME).
-    reasoning = getattr(args, "reasoning_parser", None)
-    if reasoning and reasoning.strip():
-        reasoning = _valid_parser_name(reasoning.strip(), "--reasoning-parser")
-        lines.append(f"  extraArgs:   # raw vLLM flags appended to `vllm serve`")
-        lines.append(f'    - "--reasoning-parser"')
-        lines.append(f'    - "{reasoning}"')
+    # extraArgs: raw --extra-arg tokens appended verbatim to `vllm serve`.
+    # JSON-array values are expanded in order; other values stay literal.
+    extra = _expand_extra_args(list(getattr(args, "extra_arg", None) or []))
+    if extra:
+        lines.append("  extraArgs:   # raw vLLM flags appended to `vllm serve`")
+        for a in extra:
+            lines.append(f"    - {_yaml_scalar(a)}")
 
     yaml_body = "\n".join(lines) + "\n"
     return name, yaml_path, yaml_body, commit_msg
@@ -1182,9 +1238,9 @@ def _print_yaml_snippet(model: ModelSpec, vram: VramEstimate, best: Option,
         if parser:
             print(f"{C.DIM}  tool calling: enabled — --tool-call-parser {parser} "
                   f"(auto-detected from {model.architecture}; remove toolCallParser for chat-only).{C.RESET}")
-    reasoning = getattr(args, "reasoning_parser", None)
-    if reasoning and reasoning.strip():
-        print(f"{C.DIM}  reasoning: --reasoning-parser {reasoning.strip()} (appended to extraArgs).{C.RESET}")
+    extra = _expand_extra_args(list(getattr(args, "extra_arg", None) or []))
+    if extra:
+        print(f"{C.DIM}  extraArgs: {' '.join(extra)} (appended to `vllm serve`).{C.RESET}")
     if kind in ("LLMDEndpoint", "LLMDDisaggEndpoint"):
         prof = pick_routing_profile(args)
         print(f"{C.DIM}  routingProfile '{prof}' baked into the manifest (EPP scorer weights).{C.RESET}")
