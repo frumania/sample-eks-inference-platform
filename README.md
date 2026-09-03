@@ -181,6 +181,20 @@ Folder `workloads/models/inference`
 `./platformctl new-model <yaml-name> --undeploy
 ```
 
+## Credentials
+
+- Open Web UI, uses Cognito, see Terraform Output
+- Grafana, uses Cognito, see Terraform Output
+- Langfuse, see Terraform Output
+- LiteLLM UI user: admin, password see Terraform Output
+```bash
+kubectl -n ai-platform get secret litellm-secrets -o jsonpath='{.data.master-key}' | base64 -d
+```
+- ArgoCD (without Identity Center) user:admin, password
+```bash
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+```
+
 ## AWS European Sovereign Cloud
 
 Check `example-esc.tfvars` for a working deployment config!
