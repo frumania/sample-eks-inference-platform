@@ -19,7 +19,7 @@ shared_config = {
 # private_eks_cluster = false (below): a plan-time check refuses to expose the
 # control plane to 0.0.0.0/0. Set this to the public egress IP/CIDR(s) you run
 # platformctl/kubectl from (office, VPN, CI). REPLACE:
-  cluster_endpoint_public_access_cidrs = ["203.0.113.10/32"]
+cluster_endpoint_public_access_cidrs = ["203.0.113.10/32"]
 
 cluster_config = {
   kubernetes_version = "1.36"
@@ -50,8 +50,8 @@ cluster_config = {
     # Use EKS Managed Capabilities (kro, argocd, ack). If false, deploy via Helm instead
     eks_capabilities = true # Note: NOT available in the ESC partition
 
-    gitops = true # ArgoCD — if eks_capabilities = true, requires Identity Center, see below
-    kro    = true # Kube Resource Orchestrator
+    gitops = true  # ArgoCD — if eks_capabilities = true, requires Identity Center, see below
+    kro    = true  # Kube Resource Orchestrator
     ack    = false # AWS Controllers for Kubernetes
   }
 
