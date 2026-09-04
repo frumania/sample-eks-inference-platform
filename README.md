@@ -1,10 +1,10 @@
 # Self-Service Inference Platform on Amazon EKS
 
-**Run every AI model your teams need - behind one API, in your own AWS account.**
+**Run every AI model your teams need - one API, your AWS account!**
   
-A self-service platform that lets teams use large language models the way they ship code: commit a few lines of YAML, git push, and the platform handles the rest - GPUs, serving, scaling, routing, and monitoring. Use frontier **models from Amazon Bedrock** on day one with no GPUs to manage or **deploy open-source models**, provisioned and served automatically.
+This sample solution provides a self-service platform that lets teams use large language models the way they ship code: commit a few lines of YAML, git push, and the platform handles the rest - GPUs, serving, scaling, routing, and monitoring. Use frontier **models from Amazon Bedrock** out of the box with no GPUs to manage or **deploy any open-source models**, provisioned and served automatically.
   
-And it all runs in your AWS account and AWS region - including the AWS European Sovereign Cloud - so your data and models stay where you control them.
+And it all runs in your AWS account and desired AWS region - including the AWS European Sovereign Cloud - so your data and models stay where you control them.
   
 Key Features:
   
@@ -18,9 +18,7 @@ bespoke infra scripts.
 - The hard GPU parts, handled. Right-sizing, autoscaling, multi-GPU parallelism, and scale-out routing come from a few reusable
 templates, so you get production-grade serving from a short spec instead of deep Kubernetes/vLLM expertise.
 
-**Stack:** EKS Managed Capabilities (ArgoCD · KRO · ACK) · Karpenter · vLLM ·
-LiteLLM · Langfuse - with an optional **llm-d + Gateway API Inference
-Extension** scale tier.
+**Stack:** Amazon EKS (ArgoCD · KRO) · AWS ALB · Karpenter · vLLM · LiteLLM · Open WebUI · Langfuse - with an optional **llm-d + Gateway API Inference Extension** scale tier.
 
 ![Cluster dashboard - live topology of nodes, GPU slots, and deployed models](docs/img/cluster-dashboard.png)
 
