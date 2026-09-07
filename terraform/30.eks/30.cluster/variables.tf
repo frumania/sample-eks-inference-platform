@@ -153,7 +153,7 @@ variable "argocd_helm_chart_version" {
 }
 
 variable "kro_helm_chart_version" {
-  description = "Helm chart version for the self-managed KRO install (oci://registry.k8s.io/kro/charts/kro), used ONLY when cluster_config.capabilities.eks_capabilities = false. Empty string installs the latest chart version; pin it for reproducible deploys (recommended for OCI charts)."
+  description = "Helm chart version (OCI tag) for the self-managed KRO install (oci://registry.k8s.io/kro/charts/kro), used ONLY when cluster_config.capabilities.eks_capabilities = false. Use the BARE semver tag with NO leading 'v' (e.g. \"0.9.4\") — KRO publishes its OCI tags without a 'v' (a stray 'v' is stripped automatically). Avoid empty/'latest': KRO's chart-metadata version reads \"v0.9.4\" while its OCI tag is \"0.9.4\", so Helm's latest-resolution tries to pull kro:v0.9.4 and fails with 'not found'. Pin an explicit valid tag."
   type        = string
   default     = ""
 }

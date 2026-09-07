@@ -44,7 +44,7 @@ resource "helm_release" "kro_selfmanaged" {
   name       = "kro"
   repository = "oci://registry.k8s.io/kro/charts"
   chart      = "kro"
-  version    = var.kro_helm_chart_version # "" = latest (pinning recommended for OCI)
+  version    = trimprefix(var.kro_helm_chart_version, "v") # KRO's OCI tags are bare semver (0.9.4, not v0.9.4); strip a stray leading "v"
   namespace  = "kro-system"
 
   create_namespace = true
