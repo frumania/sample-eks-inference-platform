@@ -106,19 +106,6 @@ cd terraform/00.global/vars && cp example.tfvars dev.tfvars
           aws_region_name: os.environ/AWS_REGION
 ```
 
-For AWS European Sovereign Cloud
-```yaml
-- model_name: nova-lite
-        litellm_params:
-          model: bedrock/amazon.nova-lite-v1:0
-          aws_region_name: os.environ/AWS_REGION
-          # ESC: LiteLLM defaults the Bedrock URL to
-          # bedrock-runtime.<region>.amazonaws.com, which doesn't exist in the
-          # aws-eusc partition. Pin the ESC endpoint (amazonaws.eu domain - same
-          # family as STS/EKS/ECR). Reached over NAT on a public cluster.
-          aws_bedrock_runtime_endpoint: https://bedrock-runtime.eusc-de-east-1.amazonaws.eu
-```
-
 3. Provision everything (VPC → EKS + capabilities → Karpenter → secrets).
 ```bash
 #    platformctl reads `region` from dev.tfvars and pins AWS_REGION for you.
@@ -161,6 +148,8 @@ Example with fine tuning
   --deploy \
   --hf-token <your-hf-token>
 ```
+
+> ⚠️ **This might take 10-15 minutes to complete, until endpoint is ready!**
 
 > ⚠️ **The recommended instance type is a sizing guide, not a guarantee.** It's
 > computed from the model's memory footprint and current on-demand pricing. What

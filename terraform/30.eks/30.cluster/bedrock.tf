@@ -105,6 +105,15 @@ resource "kubernetes_config_map" "litellm_env" {
   data = merge(
     {
       AWS_REGION = local.region
+      # Bedrock runtime endpoint, read by LiteLLM via os.environ/ in config.yaml
+      # (LiteLLM's Bedrock path signs its own requests — it does NOT read boto3's
+      # native endpoint env vars — so we must feed it a concrete URL). Built from
+      # the partition's DNS suffix so the committed litellm.yaml stays
+      # partition-agnostic: aws -> amazonaws.com (the SDK default), aws-eusc ->
+      # amazonaws.eu (the sovereign host; the .com default doesn't resolve there).
+      # Set unconditionally (like AWS_REGION): LiteLLM reads it through os.environ,
+      # so it must never be absent on a Terraform install.
+      AWS_ENDPOINT_URL_BEDROCK_RUNTIME = "https://bedrock-runtime.${local.region}.${data.aws_partition.current.dns_suffix}"
     },
     # ESC (aws-eusc) only: force the sovereign-partition STS endpoint so IRSA
     # (AssumeRoleWithWebIdentity) validates against the ESC OIDC provider. An SDK
