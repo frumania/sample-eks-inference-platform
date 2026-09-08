@@ -25,7 +25,7 @@ resource "helm_release" "argocd_selfmanaged" {
   name             = "argocd"
   repository       = "https://argoproj.github.io/argo-helm"
   chart            = "argo-cd"
-  # version          = var.argocd_helm_chart_version # latest
+  # version          = var.argocd_helm_chart_version
   namespace        = "argocd"
   create_namespace = true
 
@@ -44,7 +44,7 @@ resource "helm_release" "kro_selfmanaged" {
   name       = "kro"
   repository = "oci://registry.k8s.io/kro/charts"
   chart      = "kro"
-  # version    = var.kro_helm_chart_version # latest
+  # version    = var.kro_helm_chart_version
   namespace  = "kro-system"
 
   create_namespace = true
@@ -112,7 +112,7 @@ resource "helm_release" "ack_selfmanaged" {
   name             = "ack-${each.key}"
   repository       = "oci://public.ecr.aws/aws-controllers-k8s"
   chart            = "${each.key}-chart"
-  # version          = var.ack_helm_chart_version # "" = latest (pinning recommended for OCI)
+  # version          = var.ack_helm_chart_version
   namespace        = "ack-system"
   create_namespace = true
 
