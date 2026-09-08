@@ -15,8 +15,6 @@
 # as part of `./platformctl up` (Terraform), replacing the previous manual
 # `helm install argocd ...` / `helm install kro ...` steps.
 #
-# Chart versions default to "" (latest) to match a plain `helm install`; pin
-# var.argocd_helm_chart_version / var.kro_helm_chart_version for reproducibility.
 ################################################################################
 
 resource "helm_release" "argocd_selfmanaged" {
@@ -25,7 +23,6 @@ resource "helm_release" "argocd_selfmanaged" {
   name       = "argocd"
   repository = "https://argoproj.github.io/argo-helm"
   chart      = "argo-cd"
-  # version          = var.argocd_helm_chart_version
   namespace        = "argocd"
   create_namespace = true
 
@@ -44,8 +41,7 @@ resource "helm_release" "kro_selfmanaged" {
   name       = "kro"
   repository = "oci://registry.k8s.io/kro/charts"
   chart      = "kro"
-  # version    = var.kro_helm_chart_version
-  version = "0.9.4"
+  version    = "0.9.4"
   namespace = "kro-system"
 
   create_namespace = true
@@ -113,7 +109,6 @@ resource "helm_release" "ack_selfmanaged" {
   name       = "ack-${each.key}"
   repository = "oci://public.ecr.aws/aws-controllers-k8s"
   chart      = "${each.key}-chart"
-  # version          = var.ack_helm_chart_version
   namespace        = "ack-system"
   create_namespace = true
 

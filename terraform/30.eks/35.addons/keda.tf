@@ -22,7 +22,9 @@ resource "helm_release" "keda" {
   repository       = "https://kedacore.github.io/charts"
   chart            = "keda"
   version          = "2.16.1"
-
+  wait    = true
+  timeout = 900
+  
   # Let CRDs install/upgrade cleanly across chart bumps.
   values = [yamlencode({
     crds = { install = true }
