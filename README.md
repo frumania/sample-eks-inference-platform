@@ -166,7 +166,7 @@ Example with fine tuning
 
 Folder `workloads/models/inference`
 ```bash
-`./platformctl new-model <yaml-name> --undeploy
+./platformctl new-model <yaml-name> --undeploy
 ```
 
 ## Credentials
