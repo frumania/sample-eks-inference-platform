@@ -20,11 +20,11 @@ templates, so you get production-grade serving from a short spec instead of deep
 
 **Stack:** Amazon EKS (ArgoCD · KRO) · AWS ALB · Karpenter · vLLM · LiteLLM · Open WebUI · Langfuse - with an optional **llm-d + Gateway API Inference Extension** scale tier.
 
-![Cluster dashboard - live topology of nodes, GPU slots, and deployed models](docs/img/cluster-dashboard.png)
-
----
-
 ## Architecture
+
+**Stack:** Amazon EKS (ArgoCD · KRO) · AWS ALB · Karpenter · vLLM · LiteLLM · Open WebUI · Langfuse - with an optional **llm-d + Gateway API Inference Extension** scale tier.
+
+![Architecture](docs/img/architecture.png)
 
 ```
 git push → ArgoCD syncs → KRO expands your YAML into K8s + AWS resources
@@ -49,13 +49,16 @@ Every model answers through the same LiteLLM `/v1` API, so governance, budgets, 
 tracing apply uniformly - including the optional **llm-d** scale tier
 (`LLMDEndpoint` / `LLMDDisaggEndpoint`), which LiteLLM forwards to internally.
 
----
+
+### Custom Dashboard
+
+![Cluster dashboard - live topology of nodes, GPU slots, and deployed models](docs/img/cluster-dashboard.png)
 
 ## Prerequisites
 
 **Tools** (on the machine you run `./platformctl` from):
-- **AWS CLI v2** with credentials configured (`aws sts get-caller-identity` must work), plus the
-  [Session Manager plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) (for `./platformctl tunnel`)
+- **AWS CLI v2** with credentials configured (`aws sts get-caller-identity` must work), 
+- [AWS Session Manager plugin for the AWS CLI](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) (for `./platformctl tunnel`)
 - **Terraform**, **kubectl**, **make**, **jq**, **git**, and **python3** with **boto3**
 - A **fork of this repo** that ArgoCD can read - its URL goes in `gitops_repo_url`
 

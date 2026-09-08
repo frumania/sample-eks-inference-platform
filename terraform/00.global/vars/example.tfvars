@@ -84,8 +84,8 @@ cluster_config = {
 }
 
 observability_configuration = {
-  aws_oss_tooling    = false
-  aws_native_tooling = false
+  aws_oss_tooling    = false #Amazon Managed Grafana
+  aws_native_tooling = false #Amazon CloudWatch Observability EKS
 }
 
 # ECR Pull-Through Cache (optional) — ~60% faster image pulls
