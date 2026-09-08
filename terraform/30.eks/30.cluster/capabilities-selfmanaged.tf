@@ -44,7 +44,7 @@ resource "helm_release" "kro_selfmanaged" {
   name       = "kro"
   repository = "oci://registry.k8s.io/kro/charts"
   chart      = "kro"
-  # version    = var.kro_helm_chart_version # latest
+  version    = "0.9.4"
   namespace  = "kro-system"
 
   create_namespace = true
