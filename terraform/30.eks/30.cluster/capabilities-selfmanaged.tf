@@ -25,7 +25,7 @@ resource "helm_release" "argocd_selfmanaged" {
   name             = "argocd"
   repository       = "https://argoproj.github.io/argo-helm"
   chart            = "argo-cd"
-  version          = var.argocd_helm_chart_version # "" = latest
+  # version          = var.argocd_helm_chart_version # latest
   namespace        = "argocd"
   create_namespace = true
 
@@ -44,7 +44,7 @@ resource "helm_release" "kro_selfmanaged" {
   name       = "kro"
   repository = "oci://registry.k8s.io/kro/charts"
   chart      = "kro"
-  version    = trimprefix(var.kro_helm_chart_version, "v") # KRO's OCI tags are bare semver (0.9.4, not v0.9.4); strip a stray leading "v"
+  # version    = var.kro_helm_chart_version # latest
   namespace  = "kro-system"
 
   create_namespace = true
