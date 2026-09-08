@@ -20,9 +20,9 @@
 resource "helm_release" "argocd_selfmanaged" {
   count = local.capabilities.gitops && !local.use_managed_capabilities ? 1 : 0
 
-  name       = "argocd"
-  repository = "https://argoproj.github.io/argo-helm"
-  chart      = "argo-cd"
+  name             = "argocd"
+  repository       = "https://argoproj.github.io/argo-helm"
+  chart            = "argo-cd"
   namespace        = "argocd"
   create_namespace = true
 
@@ -42,7 +42,7 @@ resource "helm_release" "kro_selfmanaged" {
   repository = "oci://registry.k8s.io/kro/charts"
   chart      = "kro"
   version    = "0.9.4"
-  namespace = "kro-system"
+  namespace  = "kro-system"
 
   create_namespace = true
   wait             = true
@@ -106,9 +106,9 @@ resource "aws_iam_role_policy_attachment" "ack_selfmanaged" {
 resource "helm_release" "ack_selfmanaged" {
   for_each = local.ack_selfmanaged
 
-  name       = "ack-${each.key}"
-  repository = "oci://public.ecr.aws/aws-controllers-k8s"
-  chart      = "${each.key}-chart"
+  name             = "ack-${each.key}"
+  repository       = "oci://public.ecr.aws/aws-controllers-k8s"
+  chart            = "${each.key}-chart"
   namespace        = "ack-system"
   create_namespace = true
 
