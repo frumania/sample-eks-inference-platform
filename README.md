@@ -172,7 +172,7 @@ Folder `workloads/models/inference`
 ## Credentials
 
 - Open Web UI, uses Cognito, see Terraform Output
-- Grafana, uses Cognito, see Terraform Output
+- Custom Dashboard, uses Cognito, see Terraform Output
 - Langfuse, see Terraform Output
 - LiteLLM UI user: admin, password see Terraform Output
 ```bash
