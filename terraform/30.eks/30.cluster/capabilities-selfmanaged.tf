@@ -25,7 +25,7 @@ resource "helm_release" "argocd_selfmanaged" {
   name             = "argocd"
   repository       = "https://argoproj.github.io/argo-helm"
   chart            = "argo-cd"
-  # version          = var.argocd_helm_chart_version # latest
+  version          = var.argocd_helm_chart_version # latest
   namespace        = "argocd"
   create_namespace = true
 
@@ -44,7 +44,7 @@ resource "helm_release" "kro_selfmanaged" {
   name       = "kro"
   repository = "oci://registry.k8s.io/kro/charts"
   chart      = "kro"
-  version    = "0.9.3"
+  version    = var.kro_helm_chart_version # latest
   namespace  = "kro-system"
 
   create_namespace = true
