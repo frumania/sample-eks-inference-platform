@@ -22,7 +22,9 @@ templates, so you get production-grade serving from a short spec instead of deep
 
 ## Architecture
 
-**Stack:** Amazon EKS (ArgoCD · KRO) · AWS ALB · Karpenter · vLLM · LiteLLM · Open WebUI · Langfuse - with an optional **llm-d + Gateway API Inference Extension** scale tier.
+**Stack at a glance:** Amazon EKS (ArgoCD · KRO) · AWS ALB · Karpenter · vLLM · LiteLLM · Open WebUI · Langfuse - with an optional **llm-d + Gateway API Inference Extension** scale tier.
+
+Baseline EKS Cluster via terraform as per [Automated Provisioning of Application-Ready Amazon EKS Clusters](https://github.com/aws-solutions-library-samples/guidance-for-automated-provisioning-of-application-ready-amazon-eks-clusters) solution.
 
 ![Architecture](docs/img/architecture.png)
 

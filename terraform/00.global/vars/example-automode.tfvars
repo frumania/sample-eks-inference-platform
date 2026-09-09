@@ -1,4 +1,5 @@
-# VPC CIDR — the ALB frontend SG derives its rules from this automatically.
+# EKS Auto Mode - currently broken
+
 vpc_cidr = "10.10.0.0/16"
 
 region = "<REPLACE>"
