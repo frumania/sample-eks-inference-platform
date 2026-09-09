@@ -19,10 +19,10 @@ shared_config = {
 cluster_endpoint_public_access_cidrs = ["<REPLACE>/32"]
 
 cluster_config = {
-  kubernetes_version = "1.36"
-  eks_auto_mode      = true # AWS manages compute, networking, storage
+  kubernetes_version  = "1.36"
+  eks_auto_mode       = true # AWS manages compute, networking, storage
   private_eks_cluster = false
-  create_mng_system = false # Not required when using auto mode — runs Karpenter, CoreDNS, VPC CNI
+  create_mng_system   = false # Not required when using auto mode — runs Karpenter, CoreDNS, VPC CNI
 
   capabilities = {
     kube_proxy    = false # Managed by Auto Mode
@@ -35,8 +35,8 @@ cluster_config = {
 
     eks_capabilities = false # NOT available in the ESC partition. kro, argocd, ack are created via Helm automatically instead.
 
-    gitops = true  # ArgoCD
-    kro    = true  # Kube Resource Orchestrator, required by ArgoCD pipeline
+    gitops = true # ArgoCD
+    kro    = true # Kube Resource Orchestrator, required by ArgoCD pipeline
 
     # ack              = true # optional, unused by this solution
     # ack_service_controllers = {

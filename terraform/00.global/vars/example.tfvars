@@ -47,7 +47,9 @@ cluster_config = {
     blockstorage  = true # EBS CSI Driver
     loadbalancing = true # LB Controller
 
-    # Use EKS Managed Capabilities (kro, argocd, ack). If false, deployed via Helm automatically instead. If true, requires Identity Center (see capabilities_config)
+    # Use EKS Managed Capabilities (kro, argocd, ack). 
+    # If false, deployed via Helm automatically instead.
+    # If true, requires Identity Center (see capabilities_config)
     eks_capabilities = false # Note: NOT available in the ESC partition
 
     gitops = true  # ArgoCD — if eks_capabilities = true, requires Identity Center, see below

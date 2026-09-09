@@ -62,9 +62,9 @@ tracing apply uniformly - including the optional **llm-d** scale tier
 - **Terraform**, **kubectl**, **make**, **jq**, **git**, and **python3** with **boto3**
 
 **AWS account setup**:
-- (Optional) If using **Amazon Bedrock models**. Enable desired model(s) and specify in `litellm.yaml`.
+- (Optional) If using **Amazon Bedrock models**. Enable desired model(s) in the AWS console and specify model id(s) in `litellm.yaml`.
 - (Optional) For any **self deployed model**, sufficient **service quota** for the GPU instance types you plan to self-host on (not needed for the Bedrock-only path)
-- (Optional) If using EKS Managed Capabilities (`eks_capabilities = true` = default):
+- (Optional) If using EKS Managed Capabilities (`eks_capabilities = true`):
   An **IAM Identity Center** instance for managed ArgoCD - its ARN and the SSO user who should get
   ArgoCD admin go in the tfvars (`argocd_idc_instance_arn`, `argocd_idc_region`,
   and `argocd_rbac_mappings`). **Its region can differ from your deploy `region`**

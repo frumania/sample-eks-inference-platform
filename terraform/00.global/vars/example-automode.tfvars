@@ -27,9 +27,9 @@ cluster_config = {
     loadbalancing = false # Managed by Auto Mode
 
     eks_capabilities = false # If true, requires Identity Center (see capabilities_config)
-    gitops = true # ArgoCD
-    kro    = true # Kube Resource Orchestrator
-    ack    = false # AWS Controllers for Kubernetes
+    gitops           = true  # ArgoCD
+    kro              = true  # Kube Resource Orchestrator
+    ack              = false # AWS Controllers for Kubernetes
   }
 
   # Required when gitops = true & eks_capabilities = true
