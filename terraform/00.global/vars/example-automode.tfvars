@@ -64,7 +64,7 @@ observability_configuration = {
 # ($repo/$rev) and argocd/bootstrap/workloads.yaml (repoURL) — ArgoCD generators
 # can't read this tfvar. See those files' headers for the fork checklist.
 
-gitops_repo_url = "https://github.com/YOUR-ORG/YOUR-REPO.git"
+gitops_repo_url = "https://github.com/YOUR-ORG/REPLACE-WITH-YOUR-REPO.git"
 gitops_revision = "main"
 
 # Amazon Bedrock (default: enabled) — exposes frontier models (e.g. Claude
