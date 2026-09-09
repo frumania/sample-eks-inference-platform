@@ -1,4 +1,4 @@
-# AWS European Sovereign Cloud + EKS Auto Mode
+# AWS European Sovereign Cloud
 
 vpc_cidr = "10.10.0.0/16"
 
@@ -20,18 +20,18 @@ cluster_endpoint_public_access_cidrs = ["<REPLACE>/32"]
 
 cluster_config = {
   kubernetes_version  = "1.36"
-  eks_auto_mode       = true # AWS manages compute, networking, storage
+  eks_auto_mode       = false
   private_eks_cluster = false
-  create_mng_system   = false # Not required when using auto mode — runs Karpenter, CoreDNS, VPC CNI
+  create_mng_system   = true # Not required when using auto mode — runs Karpenter, CoreDNS, VPC CNI
 
   capabilities = {
-    kube_proxy    = false # Managed by Auto Mode
-    networking    = false # Managed by Auto Mode
-    coredns       = false # Managed by Auto Mode
-    identity      = false # Managed by Auto Mode
-    autoscaling   = false # Managed by Auto Mode (no Karpenter)
-    blockstorage  = false # Managed by Auto Mode
-    loadbalancing = false # Managed by Auto Mode
+    kube_proxy    = true # kube proxy
+    networking    = true # VPC CNI
+    coredns       = true # CoreDNS
+    identity      = true # Pod Identity
+    autoscaling   = true # Karpenter
+    blockstorage  = true # EBS CSI Driver
+    loadbalancing = true # LB Controller
 
     eks_capabilities = false # NOT available in the ESC partition. kro, argocd, ack are created via Helm automatically instead.
 
