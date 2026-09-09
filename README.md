@@ -298,8 +298,7 @@ edge gotchas the Terraform handles.
 ## Cleanup
 
 ```bash
-./platformctl down <env>          # → make destroy-all ENVIRONMENT=<env>
-                                  #   prompts you to type the env name to confirm
+./platformctl down dev         # for dev.tfvars
 ```
 
 Walks the six terraform stages in reverse
