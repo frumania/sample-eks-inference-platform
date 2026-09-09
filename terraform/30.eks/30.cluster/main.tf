@@ -348,7 +348,7 @@ resource "kubernetes_annotations" "gp2" {
 }
 
 resource "kubernetes_storage_class_v1" "gp3" {
-  count = local.capabilities.blockstorage ? 1 : 0
+  count = local.capabilities.blockstorage && !local.eks_auto_mode ? 1 : 0
   metadata {
     name = "gp3"
     annotations = {
