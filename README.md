@@ -60,7 +60,6 @@ tracing apply uniformly - including the optional **llm-d** scale tier
 - **AWS CLI v2** with credentials configured (`aws sts get-caller-identity` must work), 
 - [AWS Session Manager plugin for the AWS CLI](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) (for `./platformctl tunnel`)
 - **Terraform**, **kubectl**, **make**, **jq**, **git**, and **python3** with **boto3**
-- A **fork of this repo** that ArgoCD can read - its URL goes in `gitops_repo_url`
 
 **AWS account setup**:
 - (Optional) If using EKS Managed Capabilities (`eks_capabilities = true` = default):
@@ -93,6 +92,10 @@ tracing apply uniformly - including the optional **llm-d** scale tier
 > the cluster incur significant cost; use [Cleanup](#cleanup) to remove
 > everything when finished. See [SECURITY.md](SECURITY.md).
 
+0. Create a **GitHub fork of this repo** that ArgoCD can read later - its URL goes in `gitops_repo_url`. Next, clone the forked repo to your local machine
+```bash
+git clone ...
+```
 
 1. Configure: Copy the template, then set your gitops repo URL, and region.
 ```bash
@@ -290,7 +293,7 @@ edge gotchas the Terraform handles.
                                   #   prompts you to type the env name to confirm
 ```
 
-`destroy-all` walks the six terraform stages in reverse
+Walks the six terraform stages in reverse
 (`oss-obs → native-obs → addons → cluster → iam → networking`). On a healthy
 cluster that has been idle, it finishes in ~25 minutes. On a cluster that's
 been actively running models, expect **30–45 min** and a few hand-cleanup
@@ -298,7 +301,7 @@ steps below. The script does **not** touch the bootstrap state (S3
 `tfstate-<account>` + DynamoDB `tfstate-lock`), so a subsequent
 `./platformctl up <env>` still works.
 
-### Things you'll hit (and the cause)
+### Required manual cleanup steps
 
 * **`Error acquiring the state lock`** - a previous `terraform` run was
   killed mid-flight. Find the lock ID in the error and run
