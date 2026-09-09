@@ -196,7 +196,7 @@ data:
       # `./platformctl status --check` validates it.
       - model_name: nova-lite
         litellm_params:
-          model: bedrock/amazon.nova-lite-v1:0
+          model: bedrock/eu.amazon.nova-lite-v1:0 #ESC: bedrock/amazon.nova-lite-v1:0
           aws_region_name: os.environ/AWS_REGION
           # Bedrock runtime endpoint, injected from the Terraform litellm-env
           # ConfigMap (AWS_ENDPOINT_URL_BEDROCK_RUNTIME) so this file stays

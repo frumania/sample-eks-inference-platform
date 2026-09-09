@@ -18,7 +18,7 @@ cluster_endpoint_public_access_cidrs = ["<Your IP>"]
 
 cluster_config = {
   kubernetes_version = "1.36"
-  eks_auto_mode      = false
+  eks_auto_mode      = true
 
   # private_eks_cluster false = public+private API endpoint (works with laptop provisioning — this is
   # what ./platformctl up assumes). When false you MUST scope the public endpoint
