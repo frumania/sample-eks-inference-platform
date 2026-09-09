@@ -62,6 +62,8 @@ tracing apply uniformly - including the optional **llm-d** scale tier
 - **Terraform**, **kubectl**, **make**, **jq**, **git**, and **python3** with **boto3**
 
 **AWS account setup**:
+- (Optional) If using **Amazon Bedrock models**. Enable desired model(s) and specify in `litellm.yaml`.
+- (Optional) For any **self deployed model**, sufficient **service quota** for the GPU instance types you plan to self-host on (not needed for the Bedrock-only path)
 - (Optional) If using EKS Managed Capabilities (`eks_capabilities = true` = default):
   An **IAM Identity Center** instance for managed ArgoCD - its ARN and the SSO user who should get
   ArgoCD admin go in the tfvars (`argocd_idc_instance_arn`, `argocd_idc_region`,
@@ -78,8 +80,6 @@ tracing apply uniformly - including the optional **llm-d** scale tier
   aws identitystore list-users --identity-store-id <d-xxxx> --region <idc-region> \
     --query 'Users[].[UserName,UserId]' --output text
   ```
-- (Optional) If using **Amazon Bedrock models**. Enable desired model(s) and specify in `litellm.yaml`.
-- (Optional) For any **self deployed model**, sufficient **service quota** for the GPU instance types you plan to self-host on (not needed for the Bedrock-only path)
 
 ## Quick start
 
@@ -94,21 +94,30 @@ tracing apply uniformly - including the optional **llm-d** scale tier
 
 0. Create a **GitHub fork of this repo** that ArgoCD can read later - its URL goes in `gitops_repo_url`. Next, clone the forked repo to your local machine
 ```bash
-git clone ...
+git clone https://github.com/YOUR-ORG/REPLACE-WITH-YOUR-REPO.git
 ```
 
 1. Configure: Copy the template, then set your gitops repo URL, and region.
 ```bash
 cd terraform/00.global/vars && cp example.tfvars dev.tfvars   
-# edit dev.tfvars - fill every REPLACE marker e.g. your Identity Center ARN + **its region** (`argocd_idc_region`, may differ from `region`) + your **SSO user id** (`argocd_rbac_mappings`), `gitops_repo_url` (your fork), `region`, a unique `resources_prefix`, and `cluster_endpoint_public_access_cidrs` (your operator IP/CIDR - **required**
+# edit dev.tfvars - fill every REPLACE marker e.g. `gitops_repo_url` (your fork), `region` and `cluster_endpoint_public_access_cidrs` (your operator IP/CIDR - **required**)
+# In case of using EKS Managed Capabilities `eks_capabilities = true`: Your Identity Center ARN + **its region** (`argocd_idc_region`, may differ from `region`) + your **SSO user id** (`argocd_rbac_mappings`), 
 ```
 
 2. Optional for use with Bedrock, adjust `litellm.yaml`, and update model_list:
 
 ```yaml
-- model_name: opus-4-8
+      - model_name: opus-4-8
         litellm_params:
           model: bedrock/global.anthropic.claude-opus-4-8
+          aws_region_name: os.environ/AWS_REGION
+```
+
+For AWS European Sovereign Cloud (ESC)
+```yaml
+      - model_name: nova-lite
+        litellm_params:
+          model: bedrock/amazon.nova-lite-v1:0
           aws_region_name: os.environ/AWS_REGION
 ```
 
@@ -194,7 +203,7 @@ Known Issues
 
 - Public ECR Repo equivalent not available. Karpenter, ACK, aws-application-networking (LB/Gateway), eks-distro will be loaded from `public.ecr.aws`.
 - Requires NAT Gateway
-- EKS Managed Capability not available - add-ons will be installed via Helm automtically `eks_capabilities = false`
+- EKS Managed Capability not available - add-ons will be installed via Helm automatically instead `eks_capabilities = false`
 - Bedrock: Limited models available, make sure to adjust `litellm.yaml`
 
 ## Beyond the basics

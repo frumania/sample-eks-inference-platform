@@ -18,8 +18,8 @@ shared_config = {
 # Operator CIDR allowlist for the EKS PUBLIC API endpoint. REQUIRED whenever
 # private_eks_cluster = false (below): a plan-time check refuses to expose the
 # control plane to 0.0.0.0/0. Set this to the public egress IP/CIDR(s) you run
-# platformctl/kubectl from (office, VPN, CI). REPLACE:
-cluster_endpoint_public_access_cidrs = ["203.0.113.10/32"]
+# platformctl/kubectl from (office, VPN, CI).
+cluster_endpoint_public_access_cidrs = ["<REPLACE>/32"]
 
 cluster_config = {
   kubernetes_version = "1.36"
@@ -36,7 +36,7 @@ cluster_config = {
   # unless you have that in-VPC path.
   private_eks_cluster = false
 
-  create_mng_system = true # Required when not using auto mode — runs Karpenter, CoreDNS, VPC CNI
+  create_mng_system = true # Not required when using auto mode — runs Karpenter, CoreDNS, VPC CNI
 
   capabilities = {
     kube_proxy    = true # kube proxy
@@ -47,12 +47,12 @@ cluster_config = {
     blockstorage  = true # EBS CSI Driver
     loadbalancing = true # LB Controller
 
-    # Use EKS Managed Capabilities (kro, argocd, ack). If false, deploy via Helm instead
-    eks_capabilities = true # Note: NOT available in the ESC partition
+    # Use EKS Managed Capabilities (kro, argocd, ack). If false, deployed via Helm automatically instead. If true, requires Identity Center (see capabilities_config)
+    eks_capabilities = false # Note: NOT available in the ESC partition
 
     gitops = true  # ArgoCD — if eks_capabilities = true, requires Identity Center, see below
-    kro    = true  # Kube Resource Orchestrator
-    ack    = false # AWS Controllers for Kubernetes
+    kro    = true  # Kube Resource Orchestrator, required by ArgoCD pipeline
+    ack    = false # AWS Controllers for Kubernetes, not used by this solution
   }
 
   # Required when gitops = true & eks_capabilities = true
@@ -69,18 +69,19 @@ cluster_config = {
   #   aws identitystore list-users --identity-store-id <d-xxxx> --region <idc-region> \
   #     --query 'Users[].[UserName,UserId]' --output text
 
-  capabilities_config = {
-    argocd_idc_instance_arn = "arn:aws:sso:::instance/ssoins-XXXXXXXXXX" # REPLACE
-    argocd_idc_region       = "us-east-1"                                # REPLACE — the Identity Center instance's region (may differ from `region`)
-    argocd_rbac_mappings = [
-      {
-        role = "ADMIN"
-        identities = [
-          { id = "REPLACE-WITH-SSO-USER-ID", type = "SSO_USER" } # REPLACE — a UserId from `aws identitystore list-users` above (NOT the user name)
-        ]
-      }
-    ]
-  }
+  #  capabilities_config = {
+  #    argocd_idc_instance_arn = "arn:aws:sso:::instance/ssoins-XXXXXXXXXX" # REPLACE
+  #    argocd_idc_region       = "us-east-1"                                # REPLACE — the Identity Center instance's region (may differ from `region`)
+  #    argocd_rbac_mappings = [
+  #      {
+  #        role = "ADMIN"
+  #        identities = [
+  #          { id = "REPLACE-WITH-SSO-USER-ID", type = "SSO_USER" } # REPLACE — a UserId from `aws identitystore list-users` above (NOT the user name)
+  #        ]
+  #      }
+  #    ]
+  #  }
+
 }
 
 observability_configuration = {

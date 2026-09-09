@@ -1,6 +1,10 @@
 # VPC CIDR — the ALB frontend SG derives its rules from this automatically.
 vpc_cidr = "10.10.0.0/16"
 
+region = "<REPLACE>"
+
+cluster_endpoint_public_access_cidrs = ["<REPLACE>/32"]
+
 tags = {}
 
 shared_config = {
@@ -22,27 +26,27 @@ cluster_config = {
     blockstorage  = false # Managed by Auto Mode
     loadbalancing = false # Managed by Auto Mode
 
-    # EKS Managed Capabilities (AWS-managed, run in AWS-owned infrastructure)
-    gitops = true # ArgoCD — requires Identity Center (see capabilities_config)
+    eks_capabilities = false # If true, requires Identity Center (see capabilities_config)
+    gitops = true # ArgoCD
     kro    = true # Kube Resource Orchestrator
-    ack    = true # AWS Controllers for Kubernetes
+    ack    = false # AWS Controllers for Kubernetes
   }
 
-  # Required when gitops = true
+  # Required when gitops = true & eks_capabilities = true
   # See: https://docs.aws.amazon.com/eks/latest/userguide/argocd.html
 
-  capabilities_config = {
-    argocd_idc_instance_arn = "arn:aws:sso:::instance/ssoins-XXXXXXXXXX" # REPLACE
-    argocd_idc_region       = "us-east-1"                                # REPLACE
-    argocd_rbac_mappings = [
-      {
-        role = "ADMIN"
-        identities = [
-          { id = "REPLACE-WITH-SSO-USER-ID", type = "SSO_USER" }
-        ]
-      }
-    ]
-  }
+  #  capabilities_config = {
+  #    argocd_idc_instance_arn = "arn:aws:sso:::instance/ssoins-XXXXXXXXXX" # REPLACE
+  #    argocd_idc_region       = "us-east-1"                                # REPLACE — the Identity Center instance's region (may differ from `region`)
+  #    argocd_rbac_mappings = [
+  #      {
+  #        role = "ADMIN"
+  #        identities = [
+  #          { id = "REPLACE-WITH-SSO-USER-ID", type = "SSO_USER" } # REPLACE — a UserId from `aws identitystore list-users` above (NOT the user name)
+  #        ]
+  #      }
+  #    ]
+  #  }
 }
 
 observability_configuration = {

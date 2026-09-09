@@ -1,3 +1,5 @@
+# AWS European Sovereign Cloud + EKS Auto Mode
+
 vpc_cidr = "10.10.0.0/16"
 
 region = "eusc-de-east-1"
@@ -11,42 +13,30 @@ shared_config = {
 # Operator CIDR allowlist for the EKS PUBLIC API endpoint. REQUIRED whenever
 # private_eks_cluster = false (below): a plan-time check refuses to expose the
 # control plane to 0.0.0.0/0. Set this to the public egress IP/CIDR(s) you run
-# platformctl/kubectl from (office, VPN, CI). REPLACE:
+# platformctl/kubectl from (office, VPN, CI):
 # e.g. as given by https://www.whatismyip.com/
 
-cluster_endpoint_public_access_cidrs = ["<Your IP>"]
+cluster_endpoint_public_access_cidrs = ["<REPLACE>/32"]
 
 cluster_config = {
   kubernetes_version = "1.36"
-  eks_auto_mode      = true
-
-  # private_eks_cluster false = public+private API endpoint (works with laptop provisioning — this is
-  # what ./platformctl up assumes). When false you MUST scope the public endpoint
-  # with cluster_endpoint_public_access_cidrs below (a plan-time check refuses an
-  # empty or 0.0.0.0/0 allowlist). true = PRIVATE-ONLY endpoint: the cluster API
-  # is reachable only from inside the VPC, so you must run Terraform/platformctl
-  # from a host in the VPC (bastion EC2, CloudShell-in-VPC, or over a VPN into the
-  # VPC) — a laptop over the public internet CANNOT provision it (the kubernetes/
-  # kubectl/helm resources will time out on the private endpoint). Leave false
-  # unless you have that in-VPC path.
-
+  eks_auto_mode      = true # AWS manages compute, networking, storage
   private_eks_cluster = false
-
-  create_mng_system = true # Required when not using auto mode — runs Karpenter, CoreDNS, VPC CNI
+  create_mng_system = false # Not required when using auto mode — runs Karpenter, CoreDNS, VPC CNI
 
   capabilities = {
-    kube_proxy    = true # kube proxy
-    networking    = true # VPC CNI
-    coredns       = true # CoreDNS
-    identity      = true # Pod Identity
-    autoscaling   = true # Karpenter
-    blockstorage  = true # EBS CSI Driver
-    loadbalancing = true # LB Controller
+    kube_proxy    = false # Managed by Auto Mode
+    networking    = false # Managed by Auto Mode
+    coredns       = false # Managed by Auto Mode
+    identity      = false # Managed by Auto Mode
+    autoscaling   = false # Managed by Auto Mode (no Karpenter)
+    blockstorage  = false # Managed by Auto Mode
+    loadbalancing = false # Managed by Auto Mode
 
-    eks_capabilities = false # NOT available in the ESC partition, are created via Helm automatically instead
+    eks_capabilities = false # NOT available in the ESC partition. kro, argocd, ack are created via Helm automatically instead.
 
-    gitops = true # ON = ArgoCD + pipeline
-    kro    = true # ON = required by gitops/ArgoCD
+    gitops = true  # ArgoCD
+    kro    = true  # Kube Resource Orchestrator, required by ArgoCD pipeline
 
     # ack              = true # optional, unused by this solution
     # ack_service_controllers = {
